@@ -14,7 +14,7 @@ Provides web services and related software to monitor and control:
 
 Provides also:
 <ul>
-<li> An query-based inference engine used to diagnose faults
+<li> A query-based inference engine used to diagnose faults
 <li> Software to generate and install queries and rules for the said engine
 <li> Human interface for the engine
 </ul>
