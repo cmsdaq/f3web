@@ -1,0 +1,151 @@
+<html>
+<head>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/lavish-bootstrap.css">
+  <link rel="stylesheet" href="css/custom.css">
+
+<style>
+  table {
+  border-collapse: collapse;
+  width: 90%;
+  margin-left: 15px;
+  margin-right: 15px;
+  background-color: white;
+  font-weight: bold;
+  }
+  th { 
+  border: 3px solid blue; 
+  padding-left: 15px;
+  padding-right: 15px;
+  }
+  td { 
+  border: 1px solid black;
+  
+  }
+
+</style>
+<script src="js/jquery.min.js"></script>
+<script type="text/javascript">
+  function format_table(){
+  $.getJSON("bigpic.php",function(data){
+  var content;
+  jQuery.each(data, function(i,val){
+  if(i=="central_server" || i=="appliance_clusters" || i=="tribe_server"){
+  content+="<tr><td style='font-size:16pt;'>"+i+"</td>";
+    $('#querytime').html(val.query_time);
+  console.log("here");
+  }
+  else{
+  content+="<tr><td>"+i+"</td>";
+    }
+
+
+
+    if(i=="appliance_clusters"){
+
+    content+="<tr>"
+     jQuery.each(val, function(j,vval){
+    content+="<tr><td>"+j+"("+vval.active_runs+")"+"</td><td style='background-color:"+vval.status+";'>"+vval.status+"</td>";
+    content+="<td>"+Object.keys(vval.fus).length+"</td><td>"+vval.active_primary_shards+"</td>";
+    content+="<td>"+vval.idle+"</td>";
+    content+="<td>"+vval.online+"</td>";
+    if(vval.stale.length!=0){
+    content+="<td style='background-color:yellow;' title="+vval.stale.toString()+">"+vval.stale.length+"</td>";
+    }
+    else
+    {
+    content+="<td>"+vval.stale.length+"</td>";
+    }
+    if(vval.dead.length!=0){
+    content+="<td style='background-color:red;' title="+vval.dead.toString()+">"+vval.dead.length+"</td>";
+    }
+    else
+    {
+    content+="<td>"+vval.dead.length+"</td>";
+    }
+    content+="<td style='font-size:9pt;'>";
+    for(var index in vval.fus){
+      content += index+": "+vval.fus[index].heap+"<br>";
+      }
+    content+="</td>";
+    content+="<td>"+(vval.rdisk*100).toFixed(2)+"</td>";
+    if(vval.uldisk==0 && vval.tldisk==0){
+    content+="<td>N/A</td>";
+    }
+    else{
+    content+="<td>"+(vval.uldisk/vval.tldisk*100).toFixed(2)+"</td>";
+    }
+    content+="<td>"+(vval.odisk*100).toFixed(2)+"</td>";
+    content+="</tr>";
+			    });
+    content+="</tr></tr>"
+    }
+    else{
+    content +="<td style='background-color:"+val.status+";'>"+val.status+"</td>";
+    content +="<td>"+val.number_of_data_nodes+"</td>";
+    content +="<td>"+val.active_primary_shards+"</td>";
+    }
+    });
+
+    $('#services').html(content);
+  });
+  $.getJSON("uruns.php",function(adata){
+  var content;
+  var ldata = adata.hits.hits;
+  $.ajaxSetup({
+        async: false
+  });
+  jQuery.each(ldata, function(i,val){
+  var river;
+  $.getJSON("rivers.php?run="+val._source.runNumber,function(bdata){
+  
+  if(bdata.found==true){
+  river=" RIVER:("+bdata._source.node.name+" "+bdata._source.node.transport_address+") ";
+  }
+  else
+  {
+  river=" RIVER:(none)";
+  }
+  });
+
+  content+="<tr><td>"+val._source.runNumber+" started at "+val._source.startTime+"</td><td>"+river+"</td><tr>";
+  });
+  $('#runlist').html(content);
+  });
+  $.ajaxSetup({
+        async: true
+  });
+
+  var now = new Date();
+  
+  $('#timestamp').html(now.toLocaleString());
+  setTimeout(format_table,30000)
+  
+  }
+</script>
+</head>
+<body onload="format_table()">
+  <h1>F<sup>3</sup> General Status</h1>
+  Last Updated at <div id="timestamp"></div> 
+  Query time <div id="querytime"></div> 
+  (this page updates every 30 seconds)
+<br>
+  <table>
+    <thead>
+    <tr><th>Service</th><th>ElasticSearch Status</th><th>Data Nodes</th><th>Active Primary Shards</th><th>idle slots</th><th>active slots</th>
+      <th title="these nodes are older than 10 seconds">stale FUs (no heartbeat in the last 10s)</th>
+      <th title="these nodes are older than 1 hour">dead FUs (no heartbeat for more than 1h)</th>
+      <th>FU list/heap</th><th>ramdisk %</th><th>local (FU) disk %</th><th>output (BU) disk %</th></tr>
+    </thead>
+    <tbody id="services">
+    </tbody>
+  </table>
+
+<br>
+Runs:<br>
+  <table style="font-size:10pt;width=90%"><tr id="runlist"></tr></table>
+      
+
+</body>
+</html>

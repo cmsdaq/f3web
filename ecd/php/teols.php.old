@@ -1,0 +1,65 @@
+<?php 
+include 'config.php';
+
+if(!isset($_GET["format"])) $format = "json";
+    else $format = $_GET["format"];
+if(!isset($_GET["query"])) $query = "teols";
+    else $query = $_GET["query"];
+if(!isset($_GET["runNumber"])) $runNumber = 600006;
+    else $runNumber = $_GET["runNumber"];
+if(!isset($_GET["from"])) $from = 0;
+    else $from = $_GET["from"];
+if(!isset($_GET["to"])) $to = 10;
+    else $to = $_GET["to"];     
+if(!isset($_GET["interval"])) $interval = 20;
+    else $interval = $_GET["interval"];   
+if(!isset($_GET["sysName"])) $sysName = "cdaq";
+    else $sysName = $_GET["sysName"];
+
+$index = "runindex_".$sysName."_read/eols"; 
+
+$stringQuery = file_get_contents("../json/".$query.".json");
+
+$jsonQuery = json_decode($stringQuery,true);
+
+$jsonQuery["aggregations"]["ls"]["histogram"]["interval"] = intval($interval);
+$jsonQuery["aggregations"]["ls"]["histogram"]["extended_bounds"]["min"]= $from;
+$jsonQuery["aggregations"]["ls"]["histogram"]["extended_bounds"]["max"]= $to;
+$jsonQuery["query"]["filtered"]["filter"]["prefix"]["_id"] = "run".$runNumber;
+$jsonQuery["query"]["filtered"]["query"]["range"]["ls"]["from"]= $from;
+$jsonQuery["query"]["filtered"]["query"]["range"]["ls"]["to"]= $to;
+
+$stringQuery = json_encode($jsonQuery);
+
+//var_dump($stringQuery);
+
+
+$res=json_decode(esQuery($stringQuery,$index), true);
+
+//var_dump($res);
+
+$buckets = $res["aggregations"]["ls"]["buckets"];
+$ret = array(
+    "lsList" => array(),
+    "events" => array(),
+    "files" => array(),
+    "doc_counts" => array(),
+    );
+
+
+$ret["took"] = $res["took"];
+foreach($buckets as $bucket){
+
+    $ls = $bucket["key"];
+    $events = array($ls,$bucket["events"]["value"]);
+    $files = array($ls,$bucket["files"]["value"]);
+    $doc_counts = array($ls,$bucket["doc_count"]);
+    array_push($ret["events"], $events);
+    array_push($ret["files"], $files);
+    array_push($ret["doc_counts"], $doc_counts);
+    array_push($ret["lsList"], $ls);
+}
+
+if ($format=="json"){ echo json_encode($ret); }
+
+?>

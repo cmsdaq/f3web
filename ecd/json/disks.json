@@ -1,0 +1,60 @@
+{
+   "query": {
+      "bool": {
+         "must": [
+            {
+               "range": {
+                  "fm_date": {
+                     "from": "now-12s",
+                     "to": "now-3s"
+                  }
+               }
+            },
+            {
+               "wildcard": {
+                  "activeRuns": {
+                     "value": ""
+                  }
+               }
+            }
+         ]
+      }
+   },
+   "aggregations": {
+      "data": {
+         "avg": {
+            "field": "totalDataDir"
+         }
+      },
+      "dataused": {
+         "avg": {
+            "field": "usedDataDir"
+         }
+      },
+      "output": {
+         "avg": {
+            "field": "totalOutput"
+         }
+      },
+      "outputused": {
+         "avg": {
+            "field": "usedOutput"
+         }
+      },
+      "ramdisk": {
+         "avg": {
+            "field": "totalRamdisk"
+         }
+      },
+      "ramdiskused": {
+         "avg": {
+            "field": "usedRamdisk"
+         }
+      }
+   },
+   "post_filter": {
+      "term": {
+         "ls": -1
+      }
+   }
+}

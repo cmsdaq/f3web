@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<title>F3 Mon</title>
+
+
+<!-- Bootstrap -->
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Switch-->
+<link href="css/bootstrap-switch.min.css" rel="stylesheet">
+
+<!-- Swiper-->
+<link href="js/lib/Swiper/src/idangerous.swiper.css" rel="stylesheet">
+
+<!-- http://ghusse.github.io/jQRangeSlider/index.html -->
+<link rel="stylesheet" type="text/css" href="css/iThing-min.css">  
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="js/lib/DataTables/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="js/lib/DataTables/css/dataTables.bootstrap.css">
+
+<!-- Custom CSS -->
+<link rel="stylesheet" href="css/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="css/lavish-bootstrap.css">
+<link rel="stylesheet" href="css/custom.css">
+
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+</head>
+<body>
+
+<!-- NAVBAR
+================================================== -->
+<nav class="navbar navbar-inverse" role="navigation">
+<div class="container-fluid">
+<!-- Brand and toggle get grouped for better mobile display -->
+<div class="navbar-header">
+<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+<span class="sr-only">Toggle navigation</span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+</button>
+<a class="navbar-brand" href="#" id="f3monButton">F3 Mon</a>
+</div>
+<!-- Collect the nav links, forms, and other content for toggling -->
+<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+<ul class="nav navbar-nav navbar-left">
+<li class="">
+<a href="#" class="" data-toggle="" id="logButton"><i class="fa fa-bell"></i> Alerts <span class="label label-success" id="logNum">0</span>  </a> 
+</li>
+</ul>
+
+<!-- INDEX SELECTOR -->
+<ul class="nav navbar-nav navbar-center">
+<li>
+<div class="btn-group">
+<button type="button" class="btn navbar-btn btn-info disabled"><i class="fa fa-database"></i> System:</button>
+<button type="button" class="btn navbar-btn btn-info dropdown-toggle" data-toggle="dropdown">
+<span id="indexname"></span><span class="caret"></span></button>
+<ul class="dropdown-menu" role="menu" id = "indexlist"></ul>
+</div>
+</li>
+
+<!-- RIVERSTATUS AND RUNRANGE BUTTONS -->
+<li><button class="btn navbar-btn btn-warning" type="button" id="riverstatus" data-toggle="popover"  data-content="Checking..." data-placement="bottom"><i class="fa fa-exchange"></i> RiverStatus</button></li>
+<li><button data-toggle="tooltip" data-placement="bottom" title="Search and display last run ongoing." class="btn navbar-btn btn-success" type="button" id="runranger"><i class="fa fa-search"></i> Run Ranger</button></li>
+</ul>       
+
+
+<!-- RIGHT-BAR LINKS -->
+<ul class="nav navbar-nav navbar-right">
+<li><a href="../sctest/bigpic.html" id="tribeButton"><i class="fa fa-sitemap"></i> Tribe</a></li>
+<li><a href="../kibana-tribe/#/dashboard/file/rateTribe"><i class="fa fa-sitemap"></i> Kibana-rateTribe</a></li>
+</ul>      
+
+</div><!-- /.navbar-collapse -->
+</div><!-- /.container-fluid -->
+</nav>
+
+
+<!-- SideBar
+================================================== -->
+<div class="col-md-4 main-sidebar">
+<div class="panel-group" >
+
+<!-- RUNINFO PANEL -->
+<div class="panel panel-primary ">
+<div class="panel-heading"><h4 class="panel-title">Run Info: <span id= "runNumber"></span></h4></div> 
+<div class="panel-body">
+<ul class="list-group">
+<li class="list-group-item">StartTime: <span id="startTime"> </span></li>
+<li class="list-group-item">EndTime: <span id="endTime"> </span></li>
+<li class="list-group-item">Streams: <span id="streams"> </span></li>
+<li class="list-group-item">LS: <span id="lastls"> </span> </li>
+</ul>
+</div>        
+</div>
+
+<!-- DISKSINFO PANEL-->
+<div class="panel panel-primary ">
+<div class="panel-heading"><h4 class="panel-title">Disks Information:</h4></div> 
+<div class="panel-body">
+<ul class="list-group">
+<li class="list-group-item">BU Ramdisk: <span id="buramdisk"> </span></li>
+<li class="list-group-item">BU Outdisk: <span id="buoutdisk"> </span></li>
+<li class="list-group-item">FU Outdisk: <span id="fuoutdisk"> </span></li>
+</ul>
+</div> 
+</div>
+
+<!-- RUNLIST PANEL-->
+<div class="panel panel-primary ">
+<div class="panel-heading"><h4 class="panel-title"> Run List :
+<span id= "runListNum" class="label label-primary pull-right">Num runs:</span></h4>
+</div> 
+<div class="panel-body">
+<div id="runListTableWrapper" >
+<table id="runListTable" class="display" cellspacing="0" ></table>
+</div> 
+</div> 
+</div>
+
+</div><!-- /.panel group -->
+</div><!-- /.main-sidebar -->
+
+<!-- CENTRAL CONTAINER
+================================================== -->
+<div class="container-fluid col-md-8 clearfix">
+<div class="swiper-container clearifx swiper-main">
+<div class="swiper-wrapper">
+
+<!--First Slide-->
+<div class="swiper-slide swiper-no-swiping"> 
+<!-- Any HTML content of the first slide goes here -->
+<div class="panel-group" >
+
+<!--STREAM RATES PANEL-->
+<div class="panel panel-primary swiper-swiped">
+
+<div class="panel-body swiper-swiped">
+<div class="swiper-container clearfix swiper-nested-sr">
+<div class="swiper-wrapper">
+
+
+<div class="swiper-slide swiper-no-swiping"> 
+<div class="panel panel-primary">
+<div class="panel-heading clearfix">
+<div class="panel-title pull-left"><i class="fa fa-bar-chart-o"></i> Stream Rates </div>
+
+<div class="btn-group btn-group-xs pull-right">
+  <button type="button" class="btn btn-xs btn-primary btn-sr disabled" >&larr;</button>
+  <button type="button" class="btn btn-xs btn-default btn-dd disabled">&rarr;</button>
+</div>                                                    
+<div class="btn btn-xs disabled pull-right" id="logButton">QueryTime: 
+<span class="badge" id="querytime">N/A</span></div> 
+<div class="btn-group btn-unit btn-group-xs pull-right"> 
+<button class="btn btn-xs btn-primary ">Events</button>
+<button class="btn btn-xs btn-default ">Bytes</button>
+</div>
+</div>
+<div class="panel-body">
+<div id="streamrates-chart"></div>
+<div id="ls-slider" style="width:90%;margin: 0 auto;"></div>
+</div>
+</div> <!--STREAM RATES PANEL-->
+</div> 
+
+<!--DRILLDOWN RATES PANEL-->
+<div class="swiper-slide swiper-no-swiping">
+<div class="panel panel-primary" style="height: 100%">
+<div class="panel-heading clearfix">
+<div class="panel-title pull-left"><i class="fa fa-bar-chart-o"></i><span id="ddtitle"> DrillDown</span></div>
+<div class="btn-group btn-group-xs pull-right">
+  <button type="button" class="btn btn-xs btn-primary btn-sr disabled" >&larr;</button>
+  <button type="button" class="btn btn-xs btn-default btn-dd disabled">&rarr;</button>
+</div>          
+</div>
+<div class="panel-body">
+<div id="drilldown-chart"></div>
+</div>
+</div>
+</div> 
+
+</div> 
+</div> <!--NESTED SWIPER-->
+</div> 
+</div> <!--SWIPER PANEL WRAP for PANEL GROUP COMPATIBILTY-->
+
+<!--MICTOSTATES PANEL-->
+<div class="panel panel-primary">
+<div class="panel-heading">
+<h3 class="panel-title"><i class="fa fa-bar-chart-o"></i> Microstates Time chart </h3></div>
+<div class="panel-body">
+<div id="microstatestime-chart"></div>
+</div>
+</div>
+
+
+</div>  <!--panel group-->
+</div>  <!--First Slide-->
+
+<!--Second Slide-->
+<div class="swiper-slide swiper-no-swiping">
+<div class="panel-group" >
+<div class="panel panel-primary">
+<div class="panel-heading"><h3 class="panel-title"><i class="fa fa-file-text-o"></i> Log Messages </h3></div>
+<div class="panel-body">
+<div id="logTableWrapper" ><table id="logTable" class="display" cellspacing="0" ></table></div> 
+</div>
+</div>
+</div>  
+</div> <!--Second Slide-->
+
+<!--Third slide. Not Used. -->
+<div class="swiper-slide swiper-no-swiping">
+<iframe  width="100%" height="100%">
+<p>Your browser does not support iframes.</p>
+</iframe>
+</div>
+
+</div> <!--Swiper Wrapper-->
+</div> <!--Swiper Container-->
+
+<!--Close confirm dialog-->
+<div id="closeModal" class="modal fade">
+ <div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal">&times;</button>
+<h4 class="modal-title">Warning: close ES collector for run <span id="runNumber"></span></h4>
+</div>
+<div class="modal-body">
+<div>This command will not shut down the Run but just stop the ElasticSearch data collection.<BR>
+It will not be possible to reactivate it by this interface. 
+</div>
+<div><b>This procedure will overwrite the endTime field.</b></div> 
+<div><BR>What's your answer?
+</div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-default" data-dismiss="modal">Ops sorry, forget it.</button>
+<button type="button" class="btn btn-primary run-close-ok" data-dismiss="modal" >Sure, I know, do it now!</button>
+</div>
+</div>
+</div>
+</div> <!--Close confirm dialog-->
+</div> <!--Central Container-->
+
+
+
+<!--INCLUDES-->
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="js/lib/jquery.js"></script>
+
+<!-- http://ghusse.github.io/jQRangeSlider/index.html -->
+<script src="js/lib/jquery-ui.min.js"></script>
+<script src="js/lib/jquery.mousewheel.min.js"></script>
+<script src="js/lib/jqallrangesliders-min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/lib/bootstrap.min.js"></script>
+<!-- Bootstrap Switch-->
+<script src="js/lib/bootstrap-switch.min.js"></script>
+
+<!-- Swiper-->
+<script src="js/lib/Swiper/src/idangerous.swiper.js"></script>
+
+<!-- Highcharts -->
+<script src="js/lib/Highcharts/js/highstock.src.js"></script>
+<script src="js/lib/Highcharts/js/modules/exporting.js"></script>
+<script src="js/lib/Highcharts/js/modules/drilldown.js"></script>
+<script src="js/lib/Highcharts/js/themes/grid.js"></script>
+
+<!-- DataTables -->
+<script src="js/lib/DataTables/js/jquery.dataTables.js"></script>
+<script src="js/lib/DataTables/js/dataTables.bootstrap.js"></script>
+<script src="js/lib/DataTables/js/jquery-DT-pagination.js"></script>
+<script src="js/lib/date-euro.js"></script>
+
+<!-- utility -->
+<script src="js/lib/underscore-min.js"></script>
+<script src="js/lib/date.js"></script>
+<script src="js/lib/chroma.min.js"></script>
+
+<!-- f3 main js script, needs jquery.min.js -->
+<script src="js/utils.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/tables.js"></script>
+<script src="js/sliders.js"></script>
+<script src="js/f3mon.js"></script>
+
+</body>
+</html>
