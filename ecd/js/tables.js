@@ -19,14 +19,14 @@ runListTable = {
         {   data: 'runNumber', title:'Number'},
         {   data: 'startTime', title:'Start', type: "date-euro",
             render: function(data){
-                        d = new Date(data).toString("dd/MM/yy HH:mm:ss");
+                        d = new Date(data).toString("dd/MM/yy HH:mm");
                         return d
                     },
         },
         {   data: 'endTime', title:'End', type: "date-euro", bSortable: false, // the sorting feature for this field cause stuck
             render: function(data){
                 if (data){
-                    d = new Date(data).toString("dd/MM/yy HH:mm:ss");}
+                    d = new Date(data).toString("dd/MM/yy HH:mm");}
                 else {
                     d = "ongoing"};
                 return d
