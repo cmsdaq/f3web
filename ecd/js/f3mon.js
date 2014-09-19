@@ -556,6 +556,83 @@ var streamChart = {
     }
 }
 
+var hrChart = {
+    chart: false,
+
+    minLs: false,
+    maxLs: false,
+    
+    timer : false,
+    interval : 5000,
+    running: true,
+    
+    start : function(){ 
+        this.running = true; 
+        this.initChart()
+        this.run(); 
+    },
+    stop : function(){ 
+        clearTimeout(this.timer); 
+        if(this.chart){this.chart.showLoading(WAITINGCHART);}
+
+    },
+    run : function(){
+        console.log("hrChart...");
+        if (runInfo.runNumber && runInfo.streams){
+            if (runInfo.lastLs > 20){
+                hrChart.maxLs = runInfo.lastLs;
+                hrChart.minLs = hrChart.maxLs -20;
+            }else {
+                hrChart.minLs = 0;
+                hrChart.maxLs = 20;
+            }
+            hrChart.updateChart();   
+            return;     
+        } 
+        hrChart.next();
+    },
+    updateChart : function(){
+        
+        clearTimeout(hrChart.timer); 
+        
+        $.when(  $.getJSON('php/hltrates.php?',
+            {
+                runNumber   : runInfo.runNumber,
+                from        : hrChart.minLs,
+                to          : hrChart.maxLs,
+            })).done(function(j){
+                    j.forEach(function(pathName){
+                        console.log("hr j: ",j);
+                        data = j[pathName];
+                        console.log("hrdata: ",data);
+                        serie = hrChart.chart.get(pathName);
+                        if (serie == null){
+                            serie = hrChart.chart.addSeries({
+                                type            : 'column',
+                                id              : pathName,
+                                name            : pathName,
+                            });
+                            serie = hrChart.chart.get(pathName);
+                        }
+                        serie.setData(data);
+                    })
+                    hrChart.chart.hideLoading();
+                    hrChart.chart.redraw();
+                    hrChart.next();
+            })
+    },
+    next: function(){
+        clearTimeout(hrChart.timer); 
+        if (hrChart.running){hrChart.timer = setTimeout(function(){hrChart.run()},hrChart.interval)};      
+    },
+    initChart: function(){
+        if (this.chart) { this.chart.destroy(); }
+        this.chart = new Highcharts.Chart(hrChartConfig);
+        this.chart.showLoading(WAITINGCHART);
+    }
+}
+
+
 var microstatesChart = {
 
     chart: false,
@@ -716,6 +793,7 @@ function startItAll(){
     runList.start();
     disksStatus.start();
     streamChart.start(); 
+    hrChart.start(); 
     microstatesChart.start();
     logTable.start();
 };
@@ -749,6 +827,9 @@ function setControls(){
     });
     $("#logButton").click(function(e){
         mySwiper.swipeTo(1);
+    });
+    $("#hltButton").click(function(e){
+        mySwiper.swipeTo(2);
     });
     $("#f3monButton").click(function(e){
         mySwiper.swipeTo(0);
@@ -823,6 +904,7 @@ function changeRun(runNumber){
     runInfo.stop();
     riverStatus.stop()
     streamChart.stop();
+    hrChart.stop();
     microstatesChart.stop();
     
     runInfo.runNumber = runNumber;
@@ -830,6 +912,7 @@ function changeRun(runNumber){
     runInfo.start();
     riverStatus.start()
     streamChart.start();
+    hrChart.start();
     microstatesChart.start();
 }
 

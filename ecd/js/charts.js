@@ -227,3 +227,57 @@ mChartConfig =
             series: []
         }
 };
+
+hrChartConfig = 
+{
+    chart: {
+        //animation: false,
+        animation : {
+            duration : 500,
+            easing: 'linear'
+        },
+        renderTo : "hltrates-chart",
+        //height: 400,
+        //zoomType: 'x',
+        //events: {},
+    },
+    tooltip: {
+        followPointer: true
+    },
+    legend: {
+        align: 'center',
+        verticalAlign: 'bottom',
+        maxHeight: 50,
+    },
+    title: {
+        text: ''
+    },
+    xAxis: [
+    {
+        lineWidth:0,
+        gridLineWidth: 1,
+        id: "ls",
+        allowDecimals: false,
+        title: {
+            text: 'LS'
+        },
+        categories: true,
+        tickmarkPlacement: 'on',
+        type: "category"
+    }
+    ],
+    yAxis: [
+    {
+        title: {text: '%'},
+        max : 100,
+        min : 0,
+        lineWidth: 1,
+    }],
+   plotOptions:{
+
+        series: {
+            groupPadding: 0,
+            pointPadding: 0,
+        }
+    }
+};

@@ -1,11 +1,12 @@
 <?php
+header("Content-Type: application/json");
 
 //$runindex = "runindex_cdaq_read";
 //$boxinfoindex = "boxinfo_cdaq_read";
-$hostname = "tu-02.cern.ch"
+$hostname = "tu-02.cern.ch";
 
 
-header("Content-Type: application/json");
+
 
 function esPut ($document,$index) {
     $timeout = 5;
@@ -46,7 +47,10 @@ function esDel($index)
 
 function esQuery ($stringQuery,$index) {
     $timeout = 5;
+    $hostname = "tu-02.cern.ch";
     //$hostname = php_uname('n');
+    //var_dump($stringQuery);
+    //var_dump($index);
 
     if ($stringQuery != NULL && end(explode( '_', $index )) != "count") 
         { $index = $index."/_search?preference=_replica_first"; };
