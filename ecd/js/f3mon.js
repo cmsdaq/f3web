@@ -666,7 +666,7 @@ var microstatesChart = {
     run : function(){
         console.log("microstatesChart...");
         //console.log("mschart status "+this.status);
-        if (riverStatus.collector){
+        if (riverStatus.collector.status){
             if (microstatesChart.status == "off"){ this.getLegend(); }
             else if (microstatesChart.status == "ready"){
                 $.when( $.getJSON('php/nstates.php',{sysName: runInfo.sysName}))
