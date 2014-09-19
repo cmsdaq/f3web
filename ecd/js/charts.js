@@ -254,6 +254,8 @@ hrChartConfig =
     },
     xAxis: [
     {
+        minPadding:0,
+        maxPadding:0,
         lineWidth:0,
         gridLineWidth: 1,
         id: "ls",
@@ -268,10 +270,9 @@ hrChartConfig =
     ],
     yAxis: [
     {
-        title: {text: '%'},
-        max : 100,
-        min : 0,
+        title: {text: 'Rates'},
         lineWidth: 1,
+        min: 0,
     }],
    plotOptions:{
 

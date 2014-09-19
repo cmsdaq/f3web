@@ -9,7 +9,8 @@ if(!isset($_GET["from"])) $from = 0;
     else $from = $_GET["from"];
 if(!isset($_GET["to"])) $to = 20;
     else $to = $_GET["to"];     
-
+if(!isset($_GET["timePerLs"])) $timePerLs = 24.3;
+    else $timePerLs = $_GET["timePerLs"];     
 
 
 
@@ -33,13 +34,14 @@ $res=json_decode(esQuery($stringQuery,$index), true);
 
 $dataAccepted = array();
 $dataProcessed = array();
-$dataPerc = array();
+
 
 $hits = $res["hits"]["hits"];
 foreach ($hits as $hit ) {
     $ls = $hit["_source"]["ls"];
     $processed = $hit["_source"]["processed"];
     $pathAccepted = $hit["_source"]["path-accepted"];
+    $dataProcessed[$ls] += $processed;
     
     $i=0;
     foreach ($pathAccepted as $accepted) {
@@ -47,31 +49,28 @@ foreach ($hits as $hit ) {
         $i++;
         if (!array_key_exists($name, $dataAccepted)){
             $dataAccepted[$name] = array();
-            $dataProcessed[$name] = array();
-            $dataPerc[$name] = array();
         }
         if (!array_key_exists($ls, $dataAccepted[$name])){
             $dataAccepted[$name][$ls] = 0;
-            $dataProcessed[$name][$ls] = 0;
-
         }
         $dataAccepted[$name][$ls] += $accepted;
-        $dataProcessed[$name][$ls] += $processed;
-        $dataPerc[$name][$ls] = $dataAccepted[$name][$ls]/$dataProcessed[$name][$ls];
     }
-
 }
 
-//echo json_encode($dataProcessed);
-//echo json_encode($dataAccepted);
-//echo json_encode($dataPerc);
-
 $out = array();
-foreach ( $dataPerc as $pathName => $data ) {
-    $out[$pathName] = array();
+foreach ( $dataProcessed as $ls => $value ) {
+    $rate = round($value/$timePerLs,2);
+    $outData[] = array("name"=> $ls,"y"=>$rate);
+}
+$out[] = array("name"=>"processed","data"=> $outData);
+
+foreach ( $dataAccepted as $pathName => $data ) {
+    $outData = array();
     foreach ( $data as $ls => $value ) {
-        $out[$pathName][] = array("name"=> $ls,"y"=>$value);
+        $rate = round($value/$timePerLs,2);
+        $outData[] = array("name"=> $ls,"y"=>$rate);
     }
+    $out[] = array("name"=>$pathName,"data"=> $outData);
 }
 
 if ($format=="json"){ echo json_encode($out); }

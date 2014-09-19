@@ -9,6 +9,8 @@
 <link href="css/bootstrap.min.css" rel="stylesheet">
 <!-- Bootstrap Switch-->
 <link href="css/bootstrap-switch.min.css" rel="stylesheet">
+<!--Jquery spinner http://www.jqueryscript.net/form/Input-Number-Spinner-with-jQuery-Bootstrap-Spinner.html-->
+<link href="css/bootstrap-spinner.css" rel="stylesheet">
 
 <!-- Swiper-->
 <link href="js/lib/Swiper/src/idangerous.swiper.css" rel="stylesheet">
@@ -222,8 +224,17 @@
 <div class="swiper-slide swiper-no-swiping">
 <div class="panel-group" >
 <div class="panel panel-primary">
-<div class="panel-heading">
-<h3 class="panel-title"><i class="fa fa-bar-chart-o"></i> Hlt Rates </h3></div>
+<div class="panel-heading clearfix">
+<div class="panel-title pull-left"><i class="fa fa-bar-chart-o"></i> Hlt Rates (Show last 20 ls)</div>
+
+
+<div class="col-xs-2 input-group input-group-sm pull-right" >
+  <span class="input-group-addon">seconds per LS</span>
+  <input type="number" class="form-control" placeholder="" value="24.3" step="0.1" id="timeperls">
+</div>
+<div class="pull-right" id="errmsg"></div>      
+
+</div>
 <div class="panel-body">
 <div id="hltrates-chart"></div>
 </div>
@@ -275,6 +286,10 @@ It will not be possible to reactivate it by this interface.
 <script src="js/lib/bootstrap.min.js"></script>
 <!-- Bootstrap Switch-->
 <script src="js/lib/bootstrap-switch.min.js"></script>
+
+<!--Jquery spinner http://www.jqueryscript.net/form/Input-Number-Spinner-with-jQuery-Bootstrap-Spinner.html-->
+<script src="js/lib/jquery.spinner.js"></script>
+
 
 <!-- Swiper-->
 <script src="js/lib/Swiper/src/idangerous.swiper.js"></script>

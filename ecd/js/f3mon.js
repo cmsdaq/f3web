@@ -578,7 +578,7 @@ var hrChart = {
     },
     run : function(){
         console.log("hrChart...");
-        if (runInfo.runNumber && runInfo.streams){
+        if (runInfo.runNumber){
             if (runInfo.lastLs > 20){
                 hrChart.maxLs = runInfo.lastLs;
                 hrChart.minLs = hrChart.maxLs -20;
@@ -594,25 +594,30 @@ var hrChart = {
     updateChart : function(){
         
         clearTimeout(hrChart.timer); 
-        
+        timeperls = $("#timeperls").val();
+        console.log(timeperls);
+
         $.when(  $.getJSON('php/hltrates.php?',
             {
                 runNumber   : runInfo.runNumber,
                 from        : hrChart.minLs,
                 to          : hrChart.maxLs,
+                timePerLs   : timeperls,
             })).done(function(j){
-                    j.forEach(function(pathName){
-                        console.log("hr j: ",j);
-                        data = j[pathName];
+                    console.log("hr j: ",j);
+                    j.forEach(function(path){
+                        console.log("hrpath: ",path);
+                        name = path.name;
+                        data = path.data;
                         console.log("hrdata: ",data);
-                        serie = hrChart.chart.get(pathName);
+                        serie = hrChart.chart.get(name);
                         if (serie == null){
                             serie = hrChart.chart.addSeries({
-                                type            : 'column',
-                                id              : pathName,
-                                name            : pathName,
+                                type            : 'line',
+                                id              : name,
+                                name            : name,
                             });
-                            serie = hrChart.chart.get(pathName);
+                            serie = hrChart.chart.get(name);
                         }
                         serie.setData(data);
                     })
@@ -800,6 +805,15 @@ function startItAll(){
 
 function setControls(){
     console.log("setControls")
+    //$("#timeperls").keypress(function (e) {
+    // //if the letter is not digit then display error and don't type anything
+    //if (e.which != 8 && e.which != 0 && (e.which < 48 || e.which > 57)) {
+    //    //display error message
+    //    $("#errmsg").html("Digits Only").show().fadeOut("slow");
+    //           return false;
+    //}
+    //});
+
     $("#indexlist").on('click','li',function(){
         runInfo.sysName = $(this).find("a").text();
         runInfo.indexName = runInfo.indexList[runInfo.sysName];
