@@ -2,8 +2,15 @@ package org.elasticsearch.river.runriver;
 
 //JAVA
 import java.io.IOException;
+import java.io.File;
 import java.util.Map;
 import java.util.*;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.InputStream;
+
 
 //ELASTICSEARCH
 import org.elasticsearch.client.Client;
@@ -32,6 +39,16 @@ import org.elasticsearch.search.facet.termsstats.TermsStatsFacet.*;
 
 //JEST QUERIES
 import io.searchbox.core.Search;
+
+
+//org.json
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
+import org.apache.commons.io.IOUtils;
+
+//Jackson https://github.com/FasterXML/jackson-databind/
+//import com.fasterxml.jackson.databind.ObjectMapper;
+//import com.fasterxml.jackson.databind.JsonNode;
 
 
 
@@ -68,6 +85,7 @@ public class AbstractRunRiverThread extends Thread  {
     SearchSourceBuilder state_query;
     SearchSourceBuilder stream_query;
     SearchSourceBuilder stream_count;
+
 
     @Inject
     public AbstractRunRiverThread(RiverName riverName, RiverSettings settings, Client client) {
@@ -109,10 +127,10 @@ public class AbstractRunRiverThread extends Thread  {
             try {
                 mainLoop();
             } catch (IOException e) {
-               logger.error("Search error", e);
+               logger.error("IOEception: ", e);
                selfDelete();
             } catch (Exception e) {
-               logger.error("Search error", e);
+               logger.error("Exception: ", e);
                selfDelete();
             }   
             
@@ -150,27 +168,27 @@ public class AbstractRunRiverThread extends Thread  {
         return settings.globalSettings().get("name", "");
     }
 
+    public JSONObject getQuery(String queryName) throws Exception {
+        String filename = queryName + ".json" ;
+        InputStream is = this.getClass().getResourceAsStream( "/json/" + filename );
+        String jsonTxt = IOUtils.toString( is );
+        JSONObject json = (JSONObject) JSONSerializer.toJSON( jsonTxt );        
+        return json;
+    }
 
-    public void setQueries() {
-        
-        //LOCAl QUERIES
-        open_query = new SearchRequest()
-            .types("run")
-            .source(new SearchSourceBuilder()
-                .size(100)
-                .sort("_timestamp",SortOrder.DESC)
-                .query(QueryBuilders.constantScoreQuery(FilterBuilders.missingFilter("endTime"))) );
 
-         boxinfo_query = new SearchRequest()
-            .types("boxinfo")
-            .source(new SearchSourceBuilder()
-                .size(0)
-                .query(QueryBuilders.filteredQuery(
-                    QueryBuilders.rangeQuery("fm_date").gt("now-1m"),
-                    FilterBuilders.termFilter("activeRuns",runNumber)) ) );
-
-            
+    public void setQueries() {    
         //REMOTE QUERIES (JEST)
+
+
+                        
+        // on /runX/fu-out      
+        stream_count = new SearchSourceBuilder()
+                .sort("_timestamp",SortOrder.DESC)
+                .size(10000)
+                .query(QueryBuilders.matchAllQuery())
+                .facet(FacetBuilders.termsFacet("instream").field("stream").size(100))
+                .postFilter(FilterBuilders.termFilter("ls", -1));
 
         // on /runX/prc-i-state
         state_query = new SearchSourceBuilder()
@@ -193,14 +211,16 @@ public class AbstractRunRiverThread extends Thread  {
                 .facet(FacetBuilders.termsStatsFacet("filesize")
                     .keyField("ls").valueField("data.fileSize").order(ComparatorType.REVERSE_TERM).size(30))
                 .postFilter(FilterBuilders.termFilter("ls", -1));
-                
-        // on /runX/fu-out      
-        stream_count = new SearchSourceBuilder()
-                .sort("_timestamp",SortOrder.DESC)
-                .size(10000)
-                .query(QueryBuilders.matchAllQuery())
-                .facet(FacetBuilders.termsFacet("instream").field("stream").size(100))
-                .postFilter(FilterBuilders.termFilter("ls", -1));
+
+
+
+         boxinfo_query = new SearchRequest()
+            .types("boxinfo")
+            .source(new SearchSourceBuilder()
+                .size(0)
+                .query(QueryBuilders.filteredQuery(
+                    QueryBuilders.rangeQuery("fm_date").gt("now-1m"),
+                    FilterBuilders.termFilter("activeRuns",runNumber)) ) );
         
     }
 

@@ -26,6 +26,10 @@ import org.elasticsearch.river.RiverSettings;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import static org.elasticsearch.common.xcontent.XContentFactory.*;
 
+//org.json
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
+import org.apache.commons.io.IOUtils;
 
 public class RunMonitor extends AbstractRunRiverThread {
         
@@ -38,7 +42,7 @@ public class RunMonitor extends AbstractRunRiverThread {
 
     @Override
     public void beforeLoop(){
-        logger.info("RunMonitor Started v1.2.3");
+        logger.info("RunMonitor Started v1.3.0");
         this.interval = polling_interval;
     }
     public void afterLoop(){
@@ -46,31 +50,27 @@ public class RunMonitor extends AbstractRunRiverThread {
     }
 
     @Override
-    public void mainLoop() throws Exception {        
+    public void mainLoop() throws Exception {     
         runPolling();
     }
 
     public void runPolling() throws Exception {
-
         logger.info("runPolling on index: "+runIndex_read);
-        SearchResponse response = client.search(open_query.indices(runIndex_read)).actionGet();
-        //logger.info(response.toString());    
+
+        JSONObject query = getQuery("runRanger");
+        SearchResponse response = client.prepareSearch(runIndex_read).setTypes("run")
+            .setSource(query).execute().actionGet();
+
         if (response.getHits().getTotalHits() == 0 ) { return; }
-
-
-
+        
         for (SearchHit hit : response.getHits().getHits()) {
             String runNumber = hit.getSource().get("runNumber").toString();
-            if (!runExists(runNumber)){
-                
-                createRun(runNumber);
-            } //else { logger.info("Run "+runNumber+ " already exists."); }
-
+            if (!runExists(runNumber)){ createRun(runNumber); } 
         }
-
     }
 
     public void createRun (String runNumber) throws Exception {
+
         logger.info("Started run "+ runNumber );
 
         String index = "_river";
