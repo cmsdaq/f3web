@@ -14,7 +14,7 @@ if(!isset($_GET["intervalNum"])) $intervalNum = 20;
 if(!isset($_GET["sysName"])) $sysName = "cdaq";
     else $sysName = $_GET["sysName"];
 if(!isset($_GET["streamList"])) $streamList = array("a","b");
-    else $streamList = array_map("strtolower",$_GET["streamList"]);; 
+    else $streamList = $_GET["streamList"]; 
 
 $interval = round((intval($to) - intval($from)) / intval($intervalNum),0 );
 if ($interval == 0 ){ $interval = 1; };
@@ -109,9 +109,8 @@ $ret["took"] = $took;
 $ret["lsList"] = $streamTotals["lsList"];
 
 $streams = $res["aggregations"]["stream"]["buckets"];
-foreach($streams as $stream) {
-    //lowercase stream name is mandatory because the term aggregation in streamsinrun.php return always lowercase stream names
-    $stream["key"] = strtolower($stream["key"]);
+foreach($streams as $stream) {    
+    $stream["key"] = $stream["key"];
     if ($stream["key"] == '' || !in_array($stream["key"], $streamList)) { continue; };
     array_push($ret["streamList"], $stream["key"]);
     $lsList = $stream["inrange"]["ls"]["buckets"];
