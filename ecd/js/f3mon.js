@@ -579,12 +579,12 @@ var hrChart = {
     run : function(){
         console.log("hrChart...");
         if (runInfo.runNumber){
-            if (runInfo.lastLs > 20){
+            if (runInfo.lastLs > 50){
                 hrChart.maxLs = runInfo.lastLs;
-                hrChart.minLs = hrChart.maxLs -20;
+                hrChart.minLs = hrChart.maxLs -50;
             }else {
                 hrChart.minLs = 0;
-                hrChart.maxLs = 20;
+                hrChart.maxLs = 50;
             }
             hrChart.updateChart();   
             return;     
@@ -595,7 +595,7 @@ var hrChart = {
         
         clearTimeout(hrChart.timer); 
         timeperls = $("#timeperls").val();
-        console.log(timeperls);
+        //console.log(timeperls);
 
         $.when(  $.getJSON('php/hltrates.php?',
             {
@@ -604,12 +604,12 @@ var hrChart = {
                 to          : hrChart.maxLs,
                 timePerLs   : timeperls,
             })).done(function(j){
-                    console.log("hr j: ",j);
+                    //console.log("hr j: ",j);
                     j.forEach(function(path){
-                        console.log("hrpath: ",path);
+                        //console.log("hrpath: ",path);
                         name = path.name;
                         data = path.data;
-                        console.log("hrdata: ",data);
+                        //console.log("hrdata: ",data);
                         serie = hrChart.chart.get(name);
                         if (serie == null){
                             serie = hrChart.chart.addSeries({

@@ -24,7 +24,7 @@ lsChartConfig =
     },
     xAxis: [
     {
-        lineWidth:0,
+        //lineWidth:0,
         gridLineWidth: 1,
         id: "ls",
         allowDecimals: false,
@@ -256,7 +256,7 @@ hrChartConfig =
     {
         minPadding:0,
         maxPadding:0,
-        lineWidth:0,
+        //lineWidth:0,
         gridLineWidth: 1,
         id: "ls",
         allowDecimals: false,
@@ -270,7 +270,7 @@ hrChartConfig =
     ],
     yAxis: [
     {
-        title: {text: 'Rates'},
+        title: {text: 'Num Event / s'},
         lineWidth: 1,
         min: 0,
     }],
