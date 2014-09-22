@@ -559,8 +559,7 @@ var streamChart = {
 var hrChart = {
     chart: false,
 
-    minLs: false,
-    maxLs: false,
+    numVal: 50,
     
     timer : false,
     interval : 5000,
@@ -579,13 +578,6 @@ var hrChart = {
     run : function(){
         console.log("hrChart...");
         if (runInfo.runNumber){
-            if (runInfo.lastLs > 50){
-                hrChart.maxLs = runInfo.lastLs;
-                hrChart.minLs = hrChart.maxLs -50;
-            }else {
-                hrChart.minLs = 0;
-                hrChart.maxLs = 50;
-            }
             hrChart.updateChart();   
             return;     
         } 
@@ -600,8 +592,7 @@ var hrChart = {
         $.when(  $.getJSON('php/hltrates.php?',
             {
                 runNumber   : runInfo.runNumber,
-                from        : hrChart.minLs,
-                to          : hrChart.maxLs,
+                numVal      : hrChart.numVal,
                 timePerLs   : timeperls,
             })).done(function(j){
                     //console.log("hr j: ",j);

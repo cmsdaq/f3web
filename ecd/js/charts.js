@@ -12,7 +12,7 @@ lsChartConfig =
         events: {},
     },
     tooltip: {
-        followPointer: true
+        //followPointer: true 
     },
     legend: {
         align: 'center',
@@ -246,8 +246,7 @@ hrChartConfig =
     },
     legend: {
         align: 'center',
-        verticalAlign: 'bottom',
-        maxHeight: 50,
+        verticalAlign: 'bottom'
     },
     title: {
         text: ''
@@ -256,16 +255,13 @@ hrChartConfig =
     {
         minPadding:0,
         maxPadding:0,
+        tickInterval: 1,
         //lineWidth:0,
         gridLineWidth: 1,
-        id: "ls",
         allowDecimals: false,
         title: {
             text: 'LS'
-        },
-        categories: true,
-        tickmarkPlacement: 'on',
-        type: "category"
+        }
     }
     ],
     yAxis: [

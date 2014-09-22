@@ -3,8 +3,7 @@
    "query": {
       "range": {
          "ls": {
-            "from": 0,
-            "to": 20
+            "from": 0
          }
       }
     },
