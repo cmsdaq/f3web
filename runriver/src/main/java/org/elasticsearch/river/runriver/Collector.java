@@ -20,12 +20,17 @@ import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.index.query.QueryBuilders;
 import static org.elasticsearch.common.xcontent.XContentFactory.*;
 
+//Remote query stuff
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.common.xcontent.ToXContent;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
+
 
 //RIVER
 import org.elasticsearch.river.River;
@@ -73,6 +78,7 @@ public class Collector extends AbstractRunRiverThread {
     SearchResult result;
     String res;
     Boolean EoR=false;
+    String tribeIndex;
 
     Client remoteClient;
         
@@ -85,8 +91,10 @@ public class Collector extends AbstractRunRiverThread {
     public void beforeLoop(){
         logger.info("Collector started.");
         this.interval = fetching_interval;
+        this.tribeIndex = "run"+String.format("%06d", Integer.parseInt(runNumber))+"*";
         setJestClient();
         setRemoteClient();
+
     }
     @Override
     public void afterLoop(){
@@ -107,11 +115,11 @@ public class Collector extends AbstractRunRiverThread {
     public void collectStreams() throws Exception {
         //logger.info("COLLECT STREAMS");
         Boolean dataChanged;
-        String index = "run"+String.format("%06d", Integer.parseInt(runNumber))+"*";
+        
         
         JSONObject query = getQuery("streamQuery");
-        SearchResponse sResponse = remoteClient.prepareSearch(index).setTypes("fu-out")
-            .setSource(query.toString()).execute().actionGet();
+        SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("fu-out")
+            .setSource(query).execute().actionGet();
         
         
         Terms streams = sResponse.getAggregations().get("streams");            
@@ -189,8 +197,24 @@ public class Collector extends AbstractRunRiverThread {
         
     public void collectStates() throws Exception {
         logger.info("collectStates");
+
+
+//        JSONObject query = getQuery("statesQuery");
+//        SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("prc-i-state")
+//            .setSource(query).execute().actionGet();
+//
+//
+//        Aggregations aggs = sResponse.getAggregations();
+//        if(aggs.asList().isEmpty()){return;}
+//
+//        logger.info(listHist.asList().toString());
+//        client.prepareIndex(runIndex_write, "state-hist")
+//            .setParent(runNumber)
+//            .setSource(listHist.toXContent())
+//            .execute();            
+
         search = new Search.Builder(state_query.toString())
-            .addIndex("run"+String.format("%06d", Integer.parseInt(runNumber))+"*")
+            .addIndex(tribeIndex)
             .addType("prc-i-state").build();
 
         result = jestClient.execute(search);
@@ -201,6 +225,9 @@ public class Collector extends AbstractRunRiverThread {
         //logger.info(state_query.toString());
         //logger.info(result.getJsonString());
         if(histogramFacets.isEmpty()){logger.info("State query empty");}
+
+
+
         else if (histogramFacets.get(0).getHistograms().size() > 0 ){
             Long count = histogramFacets.get(0).getHistograms().get(0).getCount();
             if (count > 0){

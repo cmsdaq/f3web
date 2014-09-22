@@ -182,13 +182,13 @@ public class AbstractRunRiverThread extends Thread  {
 
 
                         
-        // on /runX/fu-out      
-        stream_count = new SearchSourceBuilder()
-                .sort("_timestamp",SortOrder.DESC)
-                .size(10000)
-                .query(QueryBuilders.matchAllQuery())
-                .facet(FacetBuilders.termsFacet("instream").field("stream").size(100))
-                .postFilter(FilterBuilders.termFilter("ls", -1));
+//        // on /runX/fu-out      
+//        stream_count = new SearchSourceBuilder()
+//                .sort("_timestamp",SortOrder.DESC)
+//                .size(10000)
+//                .query(QueryBuilders.matchAllQuery())
+//                .facet(FacetBuilders.termsFacet("instream").field("stream").size(100))
+//                .postFilter(FilterBuilders.termFilter("ls", -1));
 
         // on /runX/prc-i-state
         state_query = new SearchSourceBuilder()
@@ -200,17 +200,17 @@ public class AbstractRunRiverThread extends Thread  {
                 .facet(FacetBuilders.histogramFacet("hmacro").field("macro").interval(1))
                 .postFilter(FilterBuilders.termFilter("ls", -1));
                 
-        // on /runX/fu-out        
-        stream_query = new SearchSourceBuilder()
-                .sort("_timestamp",SortOrder.DESC)
-                .size(10000)
-                .facet(FacetBuilders.termsStatsFacet("inls")
-                    .keyField("ls").valueField("data.in").order(ComparatorType.REVERSE_TERM).size(30))
-                .facet(FacetBuilders.termsStatsFacet("outls")
-                    .keyField("ls").valueField("data.out").order(ComparatorType.REVERSE_TERM).size(30))
-                .facet(FacetBuilders.termsStatsFacet("filesize")
-                    .keyField("ls").valueField("data.fileSize").order(ComparatorType.REVERSE_TERM).size(30))
-                .postFilter(FilterBuilders.termFilter("ls", -1));
+//        // on /runX/fu-out        
+//        stream_query = new SearchSourceBuilder()
+//                .sort("_timestamp",SortOrder.DESC)
+//                .size(10000)
+//                .facet(FacetBuilders.termsStatsFacet("inls")
+//                    .keyField("ls").valueField("data.in").order(ComparatorType.REVERSE_TERM).size(30))
+//                .facet(FacetBuilders.termsStatsFacet("outls")
+//                    .keyField("ls").valueField("data.out").order(ComparatorType.REVERSE_TERM).size(30))
+//                .facet(FacetBuilders.termsStatsFacet("filesize")
+//                    .keyField("ls").valueField("data.fileSize").order(ComparatorType.REVERSE_TERM).size(30))
+//                .postFilter(FilterBuilders.termFilter("ls", -1));
 
 
 

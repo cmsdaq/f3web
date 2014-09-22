@@ -10,6 +10,14 @@ runListTable = {
 
     bAutoWidth: false,
     bJQueryUI: true, 
+    oLanguage: {
+    oPaginate: {
+        sNext: 'Next',
+        sLast: 'l',
+        sFirst: 'f',
+        sPrevious: 'Prev'
+         }
+    },
     order: [[ 1, "desc" ]],
     iDisplayLength: 5,
     lengthChange: false,
