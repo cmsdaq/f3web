@@ -5,8 +5,7 @@
             {
                "range": {
                   "fm_date": {
-                     "from": "now-12s",
-                     "to": "now-3s"
+                     "from": "now-12s"
                   }
                }
             },
