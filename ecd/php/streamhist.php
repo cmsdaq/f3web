@@ -182,10 +182,11 @@ foreach ($lsList as $item ) {
     $processed = $item["processed"]["value"];
     $total = $streamTotals["events"][$ls] * $streamNum ;
     $doc_count = $streamTotals["doc_counts"][$ls];
+    $mdoc_count = $item["doc_counts"];
 
 //CALC MINIMERGE PERCENTS        
     if ($total == 0){ 
-        if ($doc_count == 0) {$percent = 0;} 
+        if ($doc_count == 0 || $mdoc_count == 0) {$percent = 0;} 
         else {$percent = 100; }
     }
     else{ $percent = round($processed/$total*100,2);  }

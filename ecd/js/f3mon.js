@@ -25,11 +25,12 @@ var runInfo = {
         this.streams = false; this.status = false;
     },
     run : function(){
-        console.log("Runinfo...");
-        if (!this.runNumber){ this.status = "NORUN"; }
+        console.log("Runinfo:"+runInfo.runNumber,runInfo.startTime,runInfo.endTime,runInfo.streams,runInfo.lastLs,runInfo.status,runInfo.sysName);
+        if (!this.runNumber){ this.status = "NORUN"; this.running = false; runInfo.updateUi();}
         else {
+            clearTimeout(this.timer);
             //GET RUN INFO (DATE)
-            $.getJSON('php/runInfo.php?', { runNumber : runInfo.runNumber, sysName: runInfo.sysName },
+            dRuninfo = $.getJSON('php/runInfo.php?', { runNumber : runInfo.runNumber, sysName: runInfo.sysName },
                 function(j){
                         runInfo.startTime = j.startTime ;
                         if (j.endTime){ runInfo.endTime = j.endTime; runInfo.status = "CLOSED"; } 
@@ -38,7 +39,7 @@ var runInfo = {
 
 
             //UPDATE STREAMS 
-            $.getJSON('php/streamsinrun.php?',{runNumber : runInfo.runNumber, sysName: runInfo.sysName },
+            dStreams = $.getJSON('php/streamsinrun.php?',{runNumber : runInfo.runNumber, sysName: runInfo.sysName },
                 function(j){
                     j.forEach(function(data){
                             stream = data["term"];
@@ -47,17 +48,17 @@ var runInfo = {
             })});
 
             //GET LAST LS
-            $.getJSON('php/getLastLs.php?',{runNumber : runInfo.runNumber, sysName: runInfo.sysName },
+            dLastLs = $.getJSON('php/getLastLs.php?',{runNumber : runInfo.runNumber, sysName: runInfo.sysName },
                 function(j){ if (j){runInfo.lastLs = j[0]; } 
-            })
+            });
+            $.when(dRuninfo,dStreams,dLastLs).then(function(){
+                runInfo.updateUi();
+                runReady();
+                
+            });
         }
-        runInfo.updateUi();
-
-
-        console.log("Runinfo:"+runInfo.runNumber,runInfo.startTime,runInfo.endTime,runInfo.streams,runInfo.lastLs,runInfo.status,runInfo.sysName);
-        if (runInfo.running){runInfo.timer = setTimeout(function(){runInfo.run()},runInfo.interval)};
     },
-    updateUi : function(){
+    updateUi : function(){        
         endTime = (runInfo.endTime && runInfo.endTime != "ongoing") ? new Date(runInfo.endTime).toLocaleString() : runInfo.endTime;
         startTime = (runInfo.startTime) ? new Date(runInfo.startTime).toLocaleString() : runInfo.startTime;
         if (runInfo.runNumber){ $('#runNumber').text(runInfo.runNumber); } else{ $('#runNumber').text("no Run ongoing");  }
@@ -65,6 +66,8 @@ var runInfo = {
         if (runInfo.streams){ $('#streams').text(runInfo.streams.join(", ")); } else{ $('#streams').text(NASTRING)}
         if (runInfo.startTime){$('#startTime').text(startTime);} else{ $('#startTime').text(NASTRING); }
         if (runInfo.endTime){$('#endTime').text(endTime);} else{ $('#endTime').text(NASTRING); }
+
+        if (runInfo.running){runInfo.timer = setTimeout(function(){runInfo.run()},runInfo.interval)};
     }
 }
 
@@ -240,35 +243,39 @@ var disksStatus = {
 }
 
 var streamChart = {
-    slider: false,
-    sliderBound: true,
-    sliderChanging: false,
-
-    chart: false,
-    mchart: false,
-    minLs: false,
-    maxLs: false,
-    mMinLs: false,
-    mMaxLs: false,
-    mTitle: false,
-    mmTitle: false,
-    //range: false,
-    unit: "Events", //Events, Bytes
-    lsInterval : false,
-    zoomed: false,
-
-    timer : false,
-    interval : 5000,
-    running: true,
+    slider : false,
+    chart : false,
+    mchart : false,
+    init : function(){
+        
+        this.sliderBound= true;
+        this.sliderChanging= false;
     
-    took: 0,
+        this.minLs= false;
+        this.maxLs= false;
+        this.mMinLs= false;
+        this.mMaxLs= false;
+        this.mTitle= false;
+        this.mmTitle= false;
+        this.unit= "Events"; //Events; Bytes
+        this.lsInterval = false;
+        this.zoomed= false;
+    
+        this.timer = false;
+        this.interval = 5000;
+        this.running= false;
 
-    ddData :false,
+        this.took= 0;
+    
+        this.ddData =false;
 
-    start : function(){ 
-        this.running = true; 
         this.initSlider();
         this.initChart();
+        this.disableDrillDown();
+    },
+    start : function(){ 
+        if (this.running){return;}
+        this.running = true; 
         this.run(); 
     },
     stop : function(){ 
@@ -392,8 +399,6 @@ var streamChart = {
         //lsChartConfig.chart.events.drilldown = streamChart.mmDrillDown;
         this.chart = new Highcharts.Chart(lsChartConfig);
         this.chart.showLoading(WAITINGCHART);
-
-
     },
     initSlider: function(){
         if(streamChart.slider){$("#ls-slider").rangeSlider("destroy");$("#ls-slider").unbind();};
@@ -425,7 +430,7 @@ var streamChart = {
         sliderTickStep = parseInt(runInfo.lastLs / 10 );
         $("#ls-slider").rangeSlider("bounds", 1, runInfo.lastLs);
         range = $("#ls-slider").rangeSlider("values");
-        
+        console.log("sliderbound: " , streamChart.sliderBound);
         if (streamChart.sliderBound) {
             diff = runInfo.lastLs - range.max;
             $("#ls-slider").rangeSlider("values", range.min+diff, runInfo.lastLs);
@@ -557,21 +562,22 @@ var streamChart = {
 }
 
 var hrChart = {
-    chart: false,
-
-    numVal: 50,
-    
-    timer : false,
-    interval : 5000,
-    running: true,
-    
-    start : function(){ 
-        this.running = true; 
+    chart : false,
+    init : function(){
+        this.numVal= 50;
+        this.timer = false;
+        this.interval = 5000;
+        this.running= false;    
         this.initChart()
+    },
+    start : function(){ 
+        if (this.running){return;}
+        this.running = true; 
         this.run(); 
     },
     stop : function(){ 
         clearTimeout(this.timer); 
+        this.running = false; 
         if(this.chart){this.chart.showLoading(WAITINGCHART);}
 
     },
@@ -630,20 +636,19 @@ var hrChart = {
 
 
 var microstatesChart = {
-
     chart: false,
-    status: "off", //off, waitingforlegend, ready
-    lastTime: 0,
-    series: [],
-
-    timer : false,
-    interval : 5000,
-    running: true,
-    
-
-    start : function(){ 
-        this.running = true; 
+    init : function() {
+        this.status= "off"; //off; waitingforlegend; ready
+        this.lastTime= 0;
+        this.series= [];
+        this.timer = false;
+        this.interval = 5000;
+        this.running= false;
         this.initChart();
+    },
+    start : function(){ 
+        if (this.running){return;}
+        this.running = true; 
         this.run(); 
     },
     stop : function(){ 
@@ -656,7 +661,6 @@ var microstatesChart = {
     },
     run : function(){
         console.log("microstatesChart...");
-        //console.log("mschart status "+this.status);
         if (riverStatus.collector.status){
             if (microstatesChart.status == "off"){ this.getLegend(); }
             else if (microstatesChart.status == "ready"){
@@ -763,7 +767,6 @@ var logTable = {
 
 function getIndices(){
     console.log("GetIndices...");
-
     $.when($.getJSON('php/getIndices.php'))
     .then(function(j){
         runInfo.indexList = j;
@@ -779,20 +782,6 @@ function getIndices(){
 
     })
 }
-
-function startItAll(){
-    console.log("startItAll");
-    getIndices();
-    runInfo.start();   
-    runRanger.start();
-    riverStatus.start();
-    runList.start();
-    disksStatus.start();
-    streamChart.start(); 
-    hrChart.start(); 
-    microstatesChart.start();
-    logTable.start();
-};
 
 function setControls(){
     console.log("setControls")
@@ -903,6 +892,28 @@ function setControls(){
     });
 }
 
+function runReady(){
+    streamChart.start();
+    microstatesChart.start();
+    hrChart.start(); 
+};
+
+
+function startItAll(){
+    console.log("startItAll");
+    getIndices();
+    runInfo.start();   
+    runRanger.start();
+    riverStatus.start();
+    runList.start();
+    disksStatus.start();
+    logTable.start();
+    
+    streamChart.init(); 
+    hrChart.init(); 
+    microstatesChart.init();
+};
+
 function changeRun(runNumber){
     console.log("Changing runNmber to: "+runNumber);
 
@@ -916,9 +927,9 @@ function changeRun(runNumber){
     
     runInfo.start();
     riverStatus.start()
-    streamChart.start();
-    hrChart.start();
-    microstatesChart.start();
+    streamChart.init();
+    hrChart.init();
+    microstatesChart.init();
 }
 
 setControls();
