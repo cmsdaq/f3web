@@ -7,8 +7,11 @@ if(!isset($_GET["query"])) $query = "runinfo";
     else $query = $_GET["query"];
 if(!isset($_GET["runNumber"])) $runNumber = "180017";
     else $runNumber = $_GET["runNumber"];
+if(!isset($_GET["sysName"])) $sysName = "cdaq";
+    else $sysName = $_GET["sysName"];
 
-$index = $runindex.'/run';
+$index = "runindex_".$sysName."_write/run"; 
+
 $riverIndex = "_river/runriver_".$runNumber."/";
 $stringQuery = file_get_contents("../json/".$query.".json");
 
@@ -33,9 +36,8 @@ $document = json_encode($ret);
 $index = $index."/".$runNumber;
 
 $res=json_decode(esPut($document,$index), true);
+if ($format=="json"){ echo json_encode($res); }
 $res=json_decode(esDel($riverIndex), true);
-
-
 if ($format=="json"){ echo json_encode($res); }
 
 

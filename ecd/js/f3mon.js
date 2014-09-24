@@ -880,7 +880,7 @@ function setControls(){
 
     $("#closeModal").on("click", ".run-close-ok",function() {
         //console.log(selectedRun);
-        $.when($.getJSON('php/closeRun.php',{runNumber : selectedRun}))
+        $.when($.getJSON('php/closeRun.php',{runNumber : selectedRun, sysName: runInfo.sysName}))
         .then(
             function(j){
              console.log(selectedRun+" closed.");
