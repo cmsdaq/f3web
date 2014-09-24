@@ -109,6 +109,7 @@ public class Collector extends AbstractRunRiverThread {
             streamQuery.getJSONObject("aggs").getJSONObject("streams")
                 .getJSONObject("aggs").getJSONObject("ls").getJSONObject("terms")
                 .put("size",1000000);
+            firstTime = false;
         }else{
             streamQuery.getJSONObject("aggs").getJSONObject("streams")
                 .getJSONObject("aggs").getJSONObject("ls").getJSONObject("terms")
@@ -165,6 +166,7 @@ public class Collector extends AbstractRunRiverThread {
                     if (   in.compareTo(fuinlshist.get(stream).get(ls))==0 
                         && out.compareTo(fuoutlshist.get(stream).get(ls))==0){
                         dataChanged = false;
+                        logger.info(id+" will NOT be updated.");
                     } else { logger.info(id+" already exists and will be updated."); }
                 }
                 
