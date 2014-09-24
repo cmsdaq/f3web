@@ -1,6 +1,4 @@
 var selectedRun;
-var mySwiper;
-
 
 var runInfo = {
     runNumber : false,
@@ -634,7 +632,6 @@ var hrChart = {
     }
 }
 
-
 var microstatesChart = {
     chart: false,
     init : function() {
@@ -897,7 +894,6 @@ function runReady(){
     microstatesChart.start();
     hrChart.start(); 
 };
-
 
 function startItAll(){
     console.log("startItAll");
