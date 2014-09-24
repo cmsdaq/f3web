@@ -12,7 +12,7 @@ if(!isset($_GET["to"])) $to = 2000;
 if(!isset($_GET["sysName"])) $sysName = "cdaq";
     else $sysName = $_GET["sysName"];
 if(!isset($_GET["streamList"])) $streamList = array("a","b");
-    else $streamList = array_map("strtolower",$_GET["streamList"]);; 
+    else $streamList = $_GET["streamList"]; 
 
 
 //GET TOTAL
@@ -70,7 +70,7 @@ $streamNum = count($streamList);
 $streams = $res["aggregations"]["stream"]["buckets"];
 foreach ($streams as $item ) {
     $stream = $item["key"];
-    if ($stream == '' || !in_array(strtolower($stream), $streamList)) { continue; };
+    if ($stream == '' || !in_array($stream, $streamList)) { continue; };
 
     $processed = $item["processed"]["value"];
     $doc_count = $item["doc_count"];

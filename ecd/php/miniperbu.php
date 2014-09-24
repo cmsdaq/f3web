@@ -14,7 +14,7 @@ if(!isset($_GET["stream"])) $stream = "A";
 if(!isset($_GET["sysName"])) $sysName = "cdaq";
     else $sysName = $_GET["sysName"];
 if(!isset($_GET["streamList"])) $streamList = array("a","b");
-    else $streamList = array_map("strtolower",$_GET["streamList"]);; 
+    else $streamList = $_GET["streamList"]; 
 
 
 //GET TOTAL
