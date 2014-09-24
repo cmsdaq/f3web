@@ -36,11 +36,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.facet.FacetBuilders;
 import org.elasticsearch.search.facet.termsstats.TermsStatsFacet.*;
 
-
-//JEST QUERIES
-import io.searchbox.core.Search;
-
-
 //org.json
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
@@ -113,9 +108,6 @@ public class AbstractRunRiverThread extends Thread  {
         
         //Thread settings
         isRunning = true;
-
-        //Queries
-        setQueries();
     }
 
 
@@ -175,55 +167,5 @@ public class AbstractRunRiverThread extends Thread  {
         JSONObject json = (JSONObject) JSONSerializer.toJSON( jsonTxt );        
         return json;
     }
-
-
-    public void setQueries() {    
-        //REMOTE QUERIES (JEST)
-
-
-                        
-//        // on /runX/fu-out      
-//        stream_count = new SearchSourceBuilder()
-//                .sort("_timestamp",SortOrder.DESC)
-//                .size(10000)
-//                .query(QueryBuilders.matchAllQuery())
-//                .facet(FacetBuilders.termsFacet("instream").field("stream").size(100))
-//                .postFilter(FilterBuilders.termFilter("ls", -1));
-
-        // on /runX/prc-i-state
-        state_query = new SearchSourceBuilder()
-                .sort("_timestamp",SortOrder.DESC)
-                .size(100)
-                .query(QueryBuilders.rangeQuery("_timestamp").gt("now-3s").lt("now-1s"))
-                .facet(FacetBuilders.histogramFacet("hmicro").field("micro").interval(1))
-                .facet(FacetBuilders.histogramFacet("hmini").field("mini").interval(1))
-                .facet(FacetBuilders.histogramFacet("hmacro").field("macro").interval(1))
-                .postFilter(FilterBuilders.termFilter("ls", -1));
-                
-//        // on /runX/fu-out        
-//        stream_query = new SearchSourceBuilder()
-//                .sort("_timestamp",SortOrder.DESC)
-//                .size(10000)
-//                .facet(FacetBuilders.termsStatsFacet("inls")
-//                    .keyField("ls").valueField("data.in").order(ComparatorType.REVERSE_TERM).size(30))
-//                .facet(FacetBuilders.termsStatsFacet("outls")
-//                    .keyField("ls").valueField("data.out").order(ComparatorType.REVERSE_TERM).size(30))
-//                .facet(FacetBuilders.termsStatsFacet("filesize")
-//                    .keyField("ls").valueField("data.fileSize").order(ComparatorType.REVERSE_TERM).size(30))
-//                .postFilter(FilterBuilders.termFilter("ls", -1));
-
-
-
-         boxinfo_query = new SearchRequest()
-            .types("boxinfo")
-            .source(new SearchSourceBuilder()
-                .size(0)
-                .query(QueryBuilders.filteredQuery(
-                    QueryBuilders.rangeQuery("fm_date").gt("now-1m"),
-                    FilterBuilders.termFilter("activeRuns",runNumber)) ) );
-        
-    }
-
-
 
 }

@@ -33,7 +33,8 @@ import org.apache.commons.io.IOUtils;
 
 public class RunMonitor extends AbstractRunRiverThread {
         
-
+    JSONObject streamCount;
+    JSONObject runQuery;
 
     public RunMonitor(RiverName riverName, RiverSettings settings, Client client) {
         super(riverName,settings,client);
@@ -44,6 +45,7 @@ public class RunMonitor extends AbstractRunRiverThread {
     public void beforeLoop(){
         logger.info("RunMonitor Started v1.3.0");
         this.interval = polling_interval;
+        setQuery();
     }
     public void afterLoop(){
         logger.info("RunMonitor Stopped.");
@@ -57,9 +59,9 @@ public class RunMonitor extends AbstractRunRiverThread {
     public void runPolling() throws Exception {
         logger.info("runPolling on index: "+runIndex_read);
 
-        JSONObject query = getQuery("runRanger");
+        
         SearchResponse response = client.prepareSearch(runIndex_read).setTypes("run")
-            .setSource(query).execute().actionGet();
+            .setSource(runQuery).execute().actionGet();
 
         if (response.getHits().getTotalHits() == 0 ) { return; }
         
@@ -111,4 +113,12 @@ public class RunMonitor extends AbstractRunRiverThread {
         return response.isExists();
     }
 
+    public void setQuery() {
+        try {
+                runQuery = getQuery("runRanger");
+            } catch (Exception e) {
+                logger.error("Exception: ", e);
+            }
+        
+    }
 }

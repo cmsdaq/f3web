@@ -22,37 +22,27 @@ import static org.elasticsearch.common.xcontent.XContentFactory.*;
 
 //Remote query stuff
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
-import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.InternalAggregations;
+import org.elasticsearch.search.internal.InternalSearchResponse;
 
 
 //RIVER
 import org.elasticsearch.river.River;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
-
-//JEST
-import io.searchbox.client.JestClient;
-//import io.searchbox.client.JestResult;
-
-import io.searchbox.client.http.JestHttpClient;
-import io.searchbox.client.JestClientFactory;
-import io.searchbox.client.config.HttpClientConfig;
-import io.searchbox.core.Search;
-import io.searchbox.core.SearchResult;
-import io.searchbox.indices.CreateIndex;
-
-import io.searchbox.core.search.facet.HistogramFacet;
-import io.searchbox.core.search.facet.TermsFacet;
-import io.searchbox.core.search.facet.TermsStatsFacet;
-import io.searchbox.core.search.facet.TermsStatsFacet.TermsStats;
-
 
 //org.json
 import net.sf.json.JSONObject;
@@ -67,20 +57,19 @@ import org.apache.commons.io.IOUtils;
 
 public class Collector extends AbstractRunRiverThread {
 
-    private JestClient jestClient;
     Map<String, Long> known_streams = new HashMap<String, Long>();
     Map<String, Map<String, Double>> fuinlshist = new HashMap<String, Map<String, Double>>();
     Map<String, Map<String, Double>> fuoutlshist = new HashMap<String, Map<String, Double>>();
     Map<String, Map<String, Double>> fufilesizehist = new HashMap<String, Map<String, Double>>();
 
-
-    Search search;
-    SearchResult result;
-    String res;
+    Client remoteClient;
     Boolean EoR=false;
     String tribeIndex;
+    Boolean firstTime=true;
 
-    Client remoteClient;
+    //queries
+    JSONObject streamQuery;
+    JSONObject statesQuery;
         
     @Inject
     public Collector(RiverName riverName, RiverSettings settings,Client client) {
@@ -92,8 +81,8 @@ public class Collector extends AbstractRunRiverThread {
         logger.info("Collector started.");
         this.interval = fetching_interval;
         this.tribeIndex = "run"+String.format("%06d", Integer.parseInt(runNumber))+"*";
-        setJestClient();
         setRemoteClient();
+        setQueries();
 
     }
     @Override
@@ -116,11 +105,18 @@ public class Collector extends AbstractRunRiverThread {
         //logger.info("COLLECT STREAMS");
         Boolean dataChanged;
         
-        
-        JSONObject query = getQuery("streamQuery");
+        if(firstTime){
+            streamQuery.getJSONObject("aggs").getJSONObject("streams")
+                .getJSONObject("aggs").getJSONObject("ls").getJSONObject("terms")
+                .put("size",1000000);
+        }else{
+            streamQuery.getJSONObject("aggs").getJSONObject("streams")
+                .getJSONObject("aggs").getJSONObject("ls").getJSONObject("terms")
+                .put("size",30);
+        }
+        logger.info("streamquery: "+streamQuery.toString());
         SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("fu-out")
-            .setSource(query).execute().actionGet();
-        
+            .setSource(streamQuery).execute().actionGet();
         
         Terms streams = sResponse.getAggregations().get("streams");            
         
@@ -198,53 +194,42 @@ public class Collector extends AbstractRunRiverThread {
     public void collectStates() throws Exception {
         logger.info("collectStates");
 
+        logger.info("states query: "+statesQuery.toString());
 
-//        JSONObject query = getQuery("statesQuery");
-//        SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("prc-i-state")
-//            .setSource(query).execute().actionGet();
-//
-//
-//        Aggregations aggs = sResponse.getAggregations();
-//        if(aggs.asList().isEmpty()){return;}
-//
-//        logger.info(listHist.asList().toString());
-//        client.prepareIndex(runIndex_write, "state-hist")
-//            .setParent(runNumber)
-//            .setSource(listHist.toXContent())
-//            .execute();            
+        SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("prc-i-state")
+            .setSource(statesQuery).execute().actionGet();
 
-        search = new Search.Builder(state_query.toString())
-            .addIndex(tribeIndex)
-            .addType("prc-i-state").build();
-
-        result = jestClient.execute(search);
-        List<HistogramFacet> histogramFacets = result.getFacets(HistogramFacet.class);
-
-
-        //res = String.valueOf(result.getJsonString());
-        //logger.info(state_query.toString());
-        //logger.info(result.getJsonString());
-        if(histogramFacets.isEmpty()){logger.info("State query empty");}
-
-
-
-        else if (histogramFacets.get(0).getHistograms().size() > 0 ){
-            Long count = histogramFacets.get(0).getHistograms().get(0).getCount();
-            if (count > 0){
-                //logger.info("Create state-hist ");
-                client.prepareIndex(runIndex_write, "state-hist")
-                    .setParent(runNumber)
-                    .setSource(result.getJsonObject().get("facets").toString())
-                    .execute().actionGet();
-                //logger.info(result.getJsonObject().get("facets").toString());
-            //    for (HistogramFacet hist : histogramFacets) {
-            //        logger.info(hist.getJsonString());
-            //    }
-
+        
+        XContentBuilder xb = XContentFactory.jsonBuilder().startObject(); 
+        
+        for (Aggregation agg : sResponse.getAggregations()) {
+            String name = agg.getName();
+            xb.startObject(name).startArray("entries"); 
+            Histogram hist = sResponse.getAggregations().get(name);
+            for ( Histogram.Bucket bucket : hist.getBuckets() ){
+                Long doc_count = bucket.getDocCount();            
+                Number key = bucket.getKeyAsNumber();
+                xb.startObject();
+                xb.field("key",key);
+                xb.field("count",doc_count);
+                xb.endObject();
             }
+            xb.endArray();
+            xb.endObject();
         }
+        xb.endObject();
+        client.prepareIndex(runIndex_write, "state-hist")
+            .setParent(runNumber)
+            .setSource(xb)
+            .execute();                  
 
-        //logger.info(result.getJsonObject().get("facets").toString());
+//        DO NOT DELETE. SNIPPET FOR RESPONSE TO JSON CONVERSION
+//        XContentBuilder builder = XContentFactory.contentBuilder(XContentType.JSON); 
+//        builder.startObject();
+//        sResponse.toXContent(builder, ToXContent.EMPTY_PARAMS);
+//        builder.endObject();
+//        logger.info("states results: "+builder.string());
+
     }
 
     public void checkRunEnd(){
@@ -269,15 +254,13 @@ public class Collector extends AbstractRunRiverThread {
             .addTransportAddress(new InetSocketTransportAddress(es_tribe_host, 9300));
     }
 
-
-    public void setJestClient(){
-         //JEST Configuration
-         // Construct a new Jest client according to configuration via factory
-         JestClientFactory factory = new JestClientFactory();
-         factory.setHttpClientConfig(new HttpClientConfig
-                                .Builder("http://"+es_tribe_host+":9200")
-                                .multiThreaded(true)
-                                .build());
-         jestClient = factory.getObject();
+    public void setQueries(){
+        try{
+            streamQuery = getQuery("streamQuery");
+            statesQuery = getQuery("statesQuery");    
+        } catch (Exception e) {
+           logger.error("SetQuery Exception: ", e);
+        }
+        
     }
 }
