@@ -166,7 +166,6 @@ public class Collector extends AbstractRunRiverThread {
                     if (   in.compareTo(fuinlshist.get(stream).get(ls))==0 
                         && out.compareTo(fuoutlshist.get(stream).get(ls))==0){
                         dataChanged = false;
-                        logger.info(id+" will NOT be updated.");
                     } else { logger.info(id+" already exists and will be updated."); }
                 }
                 

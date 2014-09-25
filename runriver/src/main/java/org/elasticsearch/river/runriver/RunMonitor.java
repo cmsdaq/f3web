@@ -79,15 +79,13 @@ public class RunMonitor extends AbstractRunRiverThread {
         String type = "runriver_"+runNumber;
 
 // FOR DYNAMIC MAPPING ISSUE, not working yet
-//        String map = "{\"dynamic\" : true}}";
+        String map = "{\"dynamic\" : true}}";
 
-//        
-//
-//        PutMappingRequestBuilder pmrb = client.admin().indices()
-//                        .preparePutMapping(index)
-//                        .setType(type).setSource(map);
-//        PutMappingResponse mresponse = pmrb.execute().actionGet();   
-        //logger.info(mresponse.toString());
+        PutMappingRequestBuilder pmrb = client.admin().indices()
+                        .preparePutMapping(index)
+                        .setType(type).setSource(map);
+        PutMappingResponse mresponse = pmrb.execute().actionGet();   
+        logger.info(mresponse.toString());
 
         IndexResponse response = client.prepareIndex(index, type, "_meta")
         .setSource(jsonBuilder()
