@@ -26,10 +26,15 @@ import org.elasticsearch.river.RiverSettings;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import static org.elasticsearch.common.xcontent.XContentFactory.*;
 
+//org.json
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
+import org.apache.commons.io.IOUtils;
 
 public class RunMonitor extends AbstractRunRiverThread {
         
-
+    JSONObject streamCount;
+    JSONObject runQuery;
 
     public RunMonitor(RiverName riverName, RiverSettings settings, Client client) {
         super(riverName,settings,client);
@@ -38,54 +43,49 @@ public class RunMonitor extends AbstractRunRiverThread {
 
     @Override
     public void beforeLoop(){
-        logger.info("RunMonitor Started v1.2.3");
+        logger.info("RunMonitor Started v1.3.0");
         this.interval = polling_interval;
+        setQuery();
     }
     public void afterLoop(){
         logger.info("RunMonitor Stopped.");
     }
 
     @Override
-    public void mainLoop() throws Exception {        
+    public void mainLoop() throws Exception {     
         runPolling();
     }
 
     public void runPolling() throws Exception {
-
         logger.info("runPolling on index: "+runIndex_read);
-        SearchResponse response = client.search(open_query.indices(runIndex_read)).actionGet();
-        //logger.info(response.toString());    
+
+        
+        SearchResponse response = client.prepareSearch(runIndex_read).setTypes("run")
+            .setSource(runQuery).execute().actionGet();
+
         if (response.getHits().getTotalHits() == 0 ) { return; }
-
-
-
+        
         for (SearchHit hit : response.getHits().getHits()) {
             String runNumber = hit.getSource().get("runNumber").toString();
-            if (!runExists(runNumber)){
-                
-                createRun(runNumber);
-            } //else { logger.info("Run "+runNumber+ " already exists."); }
-
+            if (!runExists(runNumber)){ createRun(runNumber); } 
         }
-
     }
 
     public void createRun (String runNumber) throws Exception {
+
         logger.info("Started run "+ runNumber );
 
         String index = "_river";
         String type = "runriver_"+runNumber;
 
 // FOR DYNAMIC MAPPING ISSUE, not working yet
-//        String map = "{\"dynamic\" : true}}";
+        String map = "{\"dynamic\" : true}}";
 
-//        
-//
-//        PutMappingRequestBuilder pmrb = client.admin().indices()
-//                        .preparePutMapping(index)
-//                        .setType(type).setSource(map);
-//        PutMappingResponse mresponse = pmrb.execute().actionGet();   
-        //logger.info(mresponse.toString());
+        PutMappingRequestBuilder pmrb = client.admin().indices()
+                        .preparePutMapping(index)
+                        .setType(type).setSource(map);
+        PutMappingResponse mresponse = pmrb.execute().actionGet();   
+        logger.info(mresponse.toString());
 
         IndexResponse response = client.prepareIndex(index, type, "_meta")
         .setSource(jsonBuilder()
@@ -111,4 +111,12 @@ public class RunMonitor extends AbstractRunRiverThread {
         return response.isExists();
     }
 
+    public void setQuery() {
+        try {
+                runQuery = getQuery("runRanger");
+            } catch (Exception e) {
+                logger.error("Exception: ", e);
+            }
+        
+    }
 }

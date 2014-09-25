@@ -9,7 +9,7 @@ runListTable = {
     ajax: "php/runListTable.php",
 
     bAutoWidth: false,
-    //bJQueryUI: true, 
+//    bJQueryUI: true, 
     order: [[ 1, "desc" ]],
     iDisplayLength: 5,
     lengthChange: false,

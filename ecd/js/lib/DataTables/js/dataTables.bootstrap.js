@@ -59,13 +59,15 @@ if ( $.fn.dataTable.Api ) {
 							break;
 
 						case 'previous':
-							btnDisplay = lang.sPrevious;
+							//btnDisplay = lang.sPrevious;
+							btnDisplay = '&larr;';
 							btnClass = button + (page > 0 ?
 								'' : ' disabled');
 							break;
 
 						case 'next':
-							btnDisplay = lang.sNext;
+							//btnDisplay = lang.sNext;
+							btnDisplay = '&rarr;';
 							btnClass = button + (page < pages-1 ?
 								'' : ' disabled');
 							break;
@@ -108,7 +110,7 @@ if ( $.fn.dataTable.Api ) {
 		};
 
 		attach(
-			$(host).empty().html('<ul class="pagination"/>').children('ul'),
+			$(host).empty().html('<ul class="pagination pagination-sm"/>').children('ul'),
 			buttons
 		);
 	}
@@ -147,8 +149,8 @@ else {
 
 				$(nPaging).append(
 					'<ul class="pagination">'+
-						'<li class="prev disabled"><a href="#">&larr; '+oLang.sPrevious+'</a></li>'+
-						'<li class="next disabled"><a href="#">'+oLang.sNext+' &rarr; </a></li>'+
+						'<li class="prev disabled"><a href="#">&larr; </a></li>'+
+						'<li class="next disabled"><a href="#">&rarr; </a></li>'+
 					'</ul>'
 				);
 				var els = $('a', nPaging);

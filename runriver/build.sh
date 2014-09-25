@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 #echo 'DELETE RIVER'
 #curl -XDELETE http://cu-01:9200/_river/runriver*
@@ -19,9 +20,6 @@ mvn3 package
 
 #echo 'Restart ES'
 #sudo service elasticsearch restart
-
-echo 'Remote Install'
-. remoteInstall.sh
 
 #sleep 10
 #echo 'CREATE RIVER'
