@@ -160,7 +160,7 @@ public class AbstractRunRiverThread extends Thread  {
         return settings.globalSettings().get("name", "");
     }
 
-    public JSONObject getQuery(String queryName) throws Exception {
+    public JSONObject getJson(String queryName) throws Exception {
         String filename = queryName + ".json" ;
         InputStream is = this.getClass().getResourceAsStream( "/json/" + filename );
         String jsonTxt = IOUtils.toString( is );

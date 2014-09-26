@@ -16,6 +16,7 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 
 //RIVER
 import org.elasticsearch.river.River;
@@ -33,19 +34,21 @@ import org.apache.commons.io.IOUtils;
 
 public class RunMonitor extends AbstractRunRiverThread {
         
-    JSONObject streamCount;
+    JSONObject streamHistMapping;
+    JSONObject stateHistMapping;
     JSONObject runQuery;
 
     public RunMonitor(RiverName riverName, RiverSettings settings, Client client) {
         super(riverName,settings,client);
-        InitSetup.prepareServer(client,runIndex_write);
     }
 
     @Override
     public void beforeLoop(){
-        logger.info("RunMonitor Started v1.3.0");
+        logger.info("RunMonitor Started v1.3.1");
+        getQueries();
+        prepareServer(client,runIndex_write);
         this.interval = polling_interval;
-        setQuery();
+        
     }
     public void afterLoop(){
         logger.info("RunMonitor Stopped.");
@@ -85,8 +88,7 @@ public class RunMonitor extends AbstractRunRiverThread {
                         .preparePutMapping(index)
                         .setType(type).setSource(map);
         PutMappingResponse mresponse = pmrb.execute().actionGet();   
-        logger.info(mresponse.toString());
-
+        
         IndexResponse response = client.prepareIndex(index, type, "_meta")
         .setSource(jsonBuilder()
                     .startObject()
@@ -111,12 +113,48 @@ public class RunMonitor extends AbstractRunRiverThread {
         return response.isExists();
     }
 
-    public void setQuery() {
+    public void getQueries() {
         try {
-                runQuery = getQuery("runRanger");
+                runQuery = getJson("runRanger");
+                stateHistMapping = getJson("stateHistMapping");
+                streamHistMapping = getJson("streamHistMapping"); 
             } catch (Exception e) {
-                logger.error("Exception: ", e);
+                logger.error("RunMonitor getQueries Exception: ", e);
             }
         
     }
+
+    public void prepareServer(Client client, String runIndex) {
+        //runindexCheck(client,runIndex);
+        createStreamMapping(client,runIndex);
+        createStateMapping(client,runIndex);
+    }
+
+    public void createStateMapping(Client client, String runIndex){
+        logger.info("createStateMapping");
+        client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
+        GetMappingsResponse response = client.admin().indices().prepareGetMappings(runIndex_write)
+            .setTypes("state-hist").execute().actionGet();
+        if (!response.mappings().isEmpty()){ logger.info("State Mapping already exists"); return; }
+        logger.info("createStateMapping");
+        client.admin().indices().preparePutMapping()
+            .setIndices(runIndex_write)
+            .setType("state-hist")
+            .setSource(stateHistMapping)
+            .execute().actionGet();
+    }
+
+    public void createStreamMapping(Client client, String runIndex){
+        client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
+        GetMappingsResponse response = client.admin().indices().prepareGetMappings(runIndex_write)
+            .setTypes("stream-hist").execute().actionGet();
+        if (!response.mappings().isEmpty()){ logger.info("Stream Mapping already exists"); return; }
+        logger.info("createStreamMapping"); 
+        client.admin().indices().preparePutMapping()
+            .setIndices(runIndex_write)
+            .setType("stream-hist")
+            .setSource(streamHistMapping)
+            .execute().actionGet();
+    }
+
 }

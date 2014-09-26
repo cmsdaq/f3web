@@ -70,6 +70,7 @@ public class Collector extends AbstractRunRiverThread {
     //queries
     JSONObject streamQuery;
     JSONObject statesQuery;
+    JSONObject boxinfoQuery;
         
     @Inject
     public Collector(RiverName riverName, RiverSettings settings,Client client) {
@@ -82,7 +83,7 @@ public class Collector extends AbstractRunRiverThread {
         this.interval = fetching_interval;
         this.tribeIndex = "run"+String.format("%06d", Integer.parseInt(runNumber))+"*";
         setRemoteClient();
-        setQueries();
+        getQueries();
 
     }
     @Override
@@ -115,9 +116,11 @@ public class Collector extends AbstractRunRiverThread {
                 .getJSONObject("aggs").getJSONObject("ls").getJSONObject("terms")
                 .put("size",30);
         }
-        logger.info("streamquery: "+streamQuery.toString());
+        //logger.info("streamquery: "+streamQuery.toString());
         SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("fu-out")
             .setSource(streamQuery).execute().actionGet();
+        
+        if(sResponse.getAggregations().asList().isEmpty()){return;}
         
         Terms streams = sResponse.getAggregations().get("streams");            
         
@@ -195,28 +198,33 @@ public class Collector extends AbstractRunRiverThread {
     public void collectStates() throws Exception {
         logger.info("collectStates");
 
-        logger.info("states query: "+statesQuery.toString());
+        //logger.info("states query: "+statesQuery.toString());
 
         SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("prc-i-state")
             .setSource(statesQuery).execute().actionGet();
 
-        
+        if(sResponse.getAggregations().asList().isEmpty()){return;}
+
         XContentBuilder xb = XContentFactory.jsonBuilder().startObject(); 
         
         for (Aggregation agg : sResponse.getAggregations()) {
             String name = agg.getName();
+            Long total = 0L;
             xb.startObject(name).startArray("entries"); 
             Histogram hist = sResponse.getAggregations().get(name);
             for ( Histogram.Bucket bucket : hist.getBuckets() ){
-                Long doc_count = bucket.getDocCount();            
                 Number key = bucket.getKeyAsNumber();
+                Long doc_count = bucket.getDocCount();            
+                total =  total + doc_count;
                 xb.startObject();
                 xb.field("key",key);
                 xb.field("count",doc_count);
                 xb.endObject();
             }
             xb.endArray();
+            xb.field("total",total);
             xb.endObject();
+            
         }
         xb.endObject();
         client.prepareIndex(runIndex_write, "state-hist")
@@ -242,7 +250,11 @@ public class Collector extends AbstractRunRiverThread {
 
     public void checkBoxInfo(){
         if (!EoR){return;}
-        SearchResponse response = client.search(boxinfo_query.indices(boxinfo_write)).actionGet();
+        boxinfoQuery.getJSONObject("filter").getJSONObject("term")
+                .put("activeRuns",runNumber);
+
+        SearchResponse response = client.prepareSearch(boxinfo_write).setSource(boxinfoQuery)
+            .execute().actionGet();
         logger.info("Boxinfo: "+ String.valueOf(response.getHits().getTotalHits()));
         if (response.getHits().getTotalHits() == 0 ) { selfDelete(); }
     }
@@ -255,12 +267,13 @@ public class Collector extends AbstractRunRiverThread {
             .addTransportAddress(new InetSocketTransportAddress(es_tribe_host, 9300));
     }
 
-    public void setQueries(){
+    public void getQueries(){
         try{
-            streamQuery = getQuery("streamQuery");
-            statesQuery = getQuery("statesQuery");    
+            streamQuery = getJson("streamQuery");
+            statesQuery = getJson("statesQuery");    
+            boxinfoQuery = getJson("boxinfoQuery");    
         } catch (Exception e) {
-           logger.error("SetQuery Exception: ", e);
+           logger.error("Collector getQueries Exception: ", e);
         }
         
     }
