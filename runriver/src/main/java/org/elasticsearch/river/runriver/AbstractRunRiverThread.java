@@ -61,6 +61,7 @@ public class AbstractRunRiverThread extends Thread  {
 
     //Runrivercomponent
     public String es_tribe_host;
+    public String es_tribe_cluster;
     public String role;
     public int polling_interval;
     public int fetching_interval;
@@ -94,7 +95,8 @@ public class AbstractRunRiverThread extends Thread  {
 
         //RunRiver Settings
         Map<String, Object> rSettings = settings.settings();
-        es_tribe_host = XContentMapValues.nodeStringValue(rSettings.get("es_tribe_host"), "http://localhost:9200");
+        es_tribe_host = XContentMapValues.nodeStringValue(rSettings.get("es_tribe_host"), "es-tribe");
+        es_tribe_cluster = XContentMapValues.nodeStringValue(rSettings.get("es_tribe_cluster"), "es-tribe");
         role = XContentMapValues.nodeStringValue(rSettings.get("role"), "monitor");
         polling_interval = XContentMapValues.nodeIntegerValue(rSettings.get("polling_interval"), 30);
         fetching_interval = XContentMapValues.nodeIntegerValue(rSettings.get("fetching_interval"), 5);

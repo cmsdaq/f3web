@@ -44,7 +44,7 @@ public class RunMonitor extends AbstractRunRiverThread {
 
     @Override
     public void beforeLoop(){
-        logger.info("RunMonitor Started v1.3.1");
+        logger.info("RunMonitor Started v1.3.2");
         getQueries();
         prepareServer(client,runIndex_write);
         this.interval = polling_interval;
@@ -96,6 +96,7 @@ public class RunMonitor extends AbstractRunRiverThread {
                         .field("runNumber", runNumber)
                         .field("role", "collector")
                         .field("es_tribe_host", es_tribe_host)
+                        .field("es_tribe_cluster", es_tribe_cluster)
                         .field("fetching_interval", fetching_interval)
                         .field("runIndex_read", runIndex_read)
                         .field("runIndex_write", runIndex_write)

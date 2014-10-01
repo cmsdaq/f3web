@@ -120,6 +120,12 @@ public class Collector extends AbstractRunRiverThread {
         SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("fu-out")
             .setSource(streamQuery).execute().actionGet();
         
+        //logger.info(String.valueOf(sResponse.getHits().getTotalHits()));
+        if(sResponse.getHits().getTotalHits() == 0L){ 
+            logger.info("streamQuery returns 0 hits");
+            return;
+        }
+
         if(sResponse.getAggregations().asList().isEmpty()){return;}
         
         Terms streams = sResponse.getAggregations().get("streams");            
@@ -203,6 +209,12 @@ public class Collector extends AbstractRunRiverThread {
         SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("prc-i-state")
             .setSource(statesQuery).execute().actionGet();
 
+        //logger.info(String.valueOf(sResponse.getHits().getTotalHits()));
+        if(sResponse.getHits().getTotalHits() == 0L){ 
+            logger.info("streamQuery returns 0 hits");
+            return;
+        }
+
         if(sResponse.getAggregations().asList().isEmpty()){return;}
 
         XContentBuilder xb = XContentFactory.jsonBuilder().startObject(); 
@@ -262,7 +274,7 @@ public class Collector extends AbstractRunRiverThread {
     public void setRemoteClient(){
         
         Settings settings = ImmutableSettings.settingsBuilder()
-            .put("cluster.name", "es-tribe").build();
+            .put("cluster.name", es_tribe_cluster).build();
         remoteClient = new TransportClient(settings)
             .addTransportAddress(new InetSocketTransportAddress(es_tribe_host, 9300));
     }
