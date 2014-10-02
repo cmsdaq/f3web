@@ -24,6 +24,8 @@ var runInfo = {
     },
     run : function(){
         console.log("Runinfo:"+runInfo.runNumber,runInfo.startTime,runInfo.endTime,runInfo.streams,runInfo.lastLs,runInfo.status,runInfo.sysName);
+        if(riverStatus.collector.status){$("#runCollecting").fadeToggle(Math.round(runInfo.interval/2))}
+            else {$("#runCollecting").fadeOut(Math.round(runInfo.interval/2))}
         if (!this.runNumber){ this.status = "NORUN"; this.running = false; runInfo.updateUi();}
         else {
             clearTimeout(this.timer);
@@ -51,8 +53,8 @@ var runInfo = {
             });
             $.when(dRuninfo,dStreams,dLastLs).then(function(){
                 runInfo.updateUi();
+                if(riverStatus.collector.status){$("#runCollecting").fadeToggle(Math.round(runInfo.interval/2))}
                 runReady();
-                
             });
         }
     },
@@ -287,7 +289,6 @@ var streamChart = {
     run : function(){
         console.log("streamChart...");
         if (runInfo.runNumber && runInfo.streams && !streamChart.sliderChanging){
-
             streamChart.updateSlider();
             if(!streamChart.zoomed){
                 streamChart.minLs = $("#ls-slider").rangeSlider("min");
@@ -299,13 +300,8 @@ var streamChart = {
         streamChart.next();
     },
     updateChart : function(){
-        //streamChart.chart.showLoading();
-        //console.log("updateChart ",streamChart.minLs,streamChart.maxLs);
-        clearTimeout(streamChart.timer); 
-        //streamChart.range = Math.round( (streamChart.maxLs-streamChart.minLs+1) / 20 );
-        //console.log(streamChart.range,streamChart.minLs,streamChart.maxLs);
-
-
+        clearTimeout(streamChart.timer);        
+        $("#srUpdating").fadeToggle(Math.round(streamChart.interval/2));
         serie = streamChart.chart.get("minimerge");
         if (serie == null){
             serie = streamChart.chart.addSeries({
@@ -383,8 +379,9 @@ var streamChart = {
                     streamChart.chart.xAxis[0].setCategories(lsList); //doenst work. dunno why.
                     streamChart.chart.redraw();
                     streamChart.chart.hideLoading();
+                    $("#srUpdating").fadeToggle(Math.round(streamChart.interval/2));
+                    //if(riverStatus.collector.status){streamChart.next();} //need a better way
                     streamChart.next();
-                
             })
     },
     next: function(){
@@ -677,12 +674,16 @@ var microstatesChart = {
                         })
                         microstatesChart.chart.redraw();
                     }
-                    if (microstatesChart.running){microstatesChart.timer = setTimeout(function(){microstatesChart.run()},microstatesChart.interval)};
+                    microstatesChart.next();
                 })
                 return;
             }
         }
         else if (runInfo.status == "CLOSED") { this.status = "off"; this.chart.showLoading("No data for this run");}
+        microstatesChart.next();
+    },
+    next : function() {
+        clearTimeout(microstatesChart.timer); 
         if (microstatesChart.running){microstatesChart.timer = setTimeout(function(){microstatesChart.run()},microstatesChart.interval)};
     },
     initChart : function(){
@@ -858,6 +859,11 @@ function setControls(){
         else { runRanger.stop() }
     });
 
+    $('.btn-rec').click(function() {
+        $("#recModal").find("#runNumber").text(runInfo.runNumber);
+        $("#recModal").modal("show");
+    });
+
     $("#runListTable").on("click", ".run-show",function() {
         //console.log($(this).closest(".row-tools").parent().html());
         rn = $(this).closest(".row-tools").attr("number");
@@ -876,6 +882,15 @@ function setControls(){
         selectedRun = rn;
         $("#closeModal").find("#runNumber").text(selectedRun);
         $("#closeModal").modal("show");
+    });
+
+    $("#recModal").on("click", ".btn-rec-keep",function() {
+        $.when($.getJSON('php/startCollector.php',{runNumber : runInfo.runNumber, sysName: runInfo.sysName}))
+        .then(
+            function(j){
+             console.log("Start collector for run: "+runInfo.runNumber);
+             console.log(j);
+        })
     });
 
     $("#closeModal").on("click", ".run-close-ok",function() {

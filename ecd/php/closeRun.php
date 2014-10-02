@@ -21,10 +21,7 @@ $jsonQuery["filter"]["term"]["_id"] = $runNumber;
 
 $stringQuery = json_encode($jsonQuery);
 
-
-
 $res=json_decode(esQuery($stringQuery,$index), true);
-
 
 $time = date(DATE_W3C,time());
 
