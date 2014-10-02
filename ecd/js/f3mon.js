@@ -272,6 +272,8 @@ var streamChart = {
         this.initSlider();
         this.initChart();
         this.disableDrillDown();
+
+        this.ongoing = true;
     },
     start : function(){ 
         if (this.running){return;}
@@ -288,7 +290,8 @@ var streamChart = {
     },
     run : function(){
         console.log("streamChart...");
-        if (runInfo.runNumber && runInfo.streams && !streamChart.sliderChanging){
+        if(riverStatus.collector.status){this.ongoing = true;}
+        if (this.ongoing && runInfo.runNumber && runInfo.streams && !streamChart.sliderChanging){
             streamChart.updateSlider();
             if(!streamChart.zoomed){
                 streamChart.minLs = $("#ls-slider").rangeSlider("min");
@@ -380,8 +383,10 @@ var streamChart = {
                     streamChart.chart.redraw();
                     streamChart.chart.hideLoading();
                     $("#srUpdating").fadeToggle(Math.round(streamChart.interval/2));
-                    //if(riverStatus.collector.status){streamChart.next();} //need a better way
+                    if(!riverStatus.collector.status){streamChart.ongoing = false;} //need a better way
+
                     streamChart.next();
+
             })
     },
     next: function(){
