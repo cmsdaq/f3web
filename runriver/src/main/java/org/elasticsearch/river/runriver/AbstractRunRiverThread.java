@@ -6,11 +6,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.*;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.InputStreamReader;
 import java.io.InputStream;
-
 
 //ELASTICSEARCH
 import org.elasticsearch.client.Client;
@@ -23,29 +19,12 @@ import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
-
-//ELASTICSEARCH QUERIES
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
-
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortOrder;
-
-import org.elasticsearch.search.facet.FacetBuilders;
-import org.elasticsearch.search.facet.termsstats.TermsStatsFacet.*;
+import org.elasticsearch.action.search.SearchResponse;
 
 //org.json
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 import org.apache.commons.io.IOUtils;
-
-//Jackson https://github.com/FasterXML/jackson-databind/
-//import com.fasterxml.jackson.databind.ObjectMapper;
-//import com.fasterxml.jackson.databind.JsonNode;
-
-
 
 //In java seems to be impossible to inherit/extend from multiple class
 //so i need to implement the AbstractRiverComponent compatibility manually
@@ -69,19 +48,13 @@ public class AbstractRunRiverThread extends Thread  {
     public String runIndex_read;
     public String runIndex_write;
     public String boxinfo_write;
+    public Boolean statsEnabled; 
 
 
     //thread
     public int interval;
     public volatile boolean isRunning;
-
-    //Queries
-    SearchRequest open_query;
-    SearchRequest boxinfo_query;
-    SearchSourceBuilder state_query;
-    SearchSourceBuilder stream_query;
-    SearchSourceBuilder stream_count;
-
+    
 
     @Inject
     public AbstractRunRiverThread(RiverName riverName, RiverSettings settings, Client client) {
@@ -104,7 +77,8 @@ public class AbstractRunRiverThread extends Thread  {
         runIndex_read = XContentMapValues.nodeStringValue(rSettings.get("runIndex_read"), "runindex_cdaq_read");
         runIndex_write = XContentMapValues.nodeStringValue(rSettings.get("runIndex_write"), "runindex_cdaq_write");
         boxinfo_write = XContentMapValues.nodeStringValue(rSettings.get("boxinfo_write"), "boxinfo_cdaq_write");
-        
+        //statsEnabled = Boolean.valueOf(XContentMapValues.nodeStringValue(rSettings.get("enable_stats"), "false"));
+        statsEnabled = false;
 
         interval = polling_interval;
         
@@ -121,10 +95,10 @@ public class AbstractRunRiverThread extends Thread  {
             try {
                 mainLoop();
             } catch (IOException e) {
-               logger.error("IOEception: ", e);
+               logger.error("Mainloop IOEception: ", e);
                selfDelete();
             } catch (Exception e) {
-               logger.error("Exception: ", e);
+               logger.error("Mainloop Exception: ", e);
                selfDelete();
             }   
             
@@ -168,6 +142,32 @@ public class AbstractRunRiverThread extends Thread  {
         String jsonTxt = IOUtils.toString( is );
         JSONObject json = (JSONObject) JSONSerializer.toJSON( jsonTxt );        
         return json;
+    }
+
+    public Boolean collectStats(String rivername, String queryname, String index, SearchResponse sResponse) {
+        if(!statsEnabled){return true;}
+        return false;
+        //try {
+        //    IndexResponse iResponse = client.prepareIndex("runriver_stats_write", "stream-hist").setRefresh(true)
+        //        .setSource(jsonBuilder()
+        //            .startObject()
+        //            .field("rivername", rivername)
+        //            .field("index", index)
+        //            .field("query_name", queryname)
+        //            .field("took", sResponse.getTookInMillis())
+        //            .field("timed_out", sResponse.isTimedOut())
+        //            .field("shards_total", sResponse.getTotalShards())
+        //            .field("shards_successful", sResponse.getSuccessfulShards())
+        //            .field("shards_failed", sResponse.getFailedShards())
+        //            .field("hits_total", sResponse.getHits().getTotalHits())
+        //            .endObject())
+        //        .execute()
+        //        .actionGet();   
+        //    return true;
+        //} catch (Exception e) {
+        //    logger.error("elasticizeStat exception: ", e);
+        //    return false;
+        //}
     }
 
 }
