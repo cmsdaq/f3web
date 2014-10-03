@@ -20,6 +20,8 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.index.IndexResponse;
+import static org.elasticsearch.common.xcontent.XContentFactory.*;
 
 //org.json
 import net.sf.json.JSONObject;
@@ -77,8 +79,7 @@ public class AbstractRunRiverThread extends Thread  {
         runIndex_read = XContentMapValues.nodeStringValue(rSettings.get("runIndex_read"), "runindex_cdaq_read");
         runIndex_write = XContentMapValues.nodeStringValue(rSettings.get("runIndex_write"), "runindex_cdaq_write");
         boxinfo_write = XContentMapValues.nodeStringValue(rSettings.get("boxinfo_write"), "boxinfo_cdaq_write");
-        //statsEnabled = Boolean.valueOf(XContentMapValues.nodeStringValue(rSettings.get("enable_stats"), "false"));
-        statsEnabled = false;
+        statsEnabled = Boolean.valueOf(XContentMapValues.nodeStringValue(rSettings.get("enable_stats"), "false"));
 
         interval = polling_interval;
         
@@ -146,28 +147,28 @@ public class AbstractRunRiverThread extends Thread  {
 
     public Boolean collectStats(String rivername, String queryname, String index, SearchResponse sResponse) {
         if(!statsEnabled){return true;}
-        return false;
-        //try {
-        //    IndexResponse iResponse = client.prepareIndex("runriver_stats_write", "stream-hist").setRefresh(true)
-        //        .setSource(jsonBuilder()
-        //            .startObject()
-        //            .field("rivername", rivername)
-        //            .field("index", index)
-        //            .field("query_name", queryname)
-        //            .field("took", sResponse.getTookInMillis())
-        //            .field("timed_out", sResponse.isTimedOut())
-        //            .field("shards_total", sResponse.getTotalShards())
-        //            .field("shards_successful", sResponse.getSuccessfulShards())
-        //            .field("shards_failed", sResponse.getFailedShards())
-        //            .field("hits_total", sResponse.getHits().getTotalHits())
-        //            .endObject())
-        //        .execute()
-        //        .actionGet();   
-        //    return true;
-        //} catch (Exception e) {
-        //    logger.error("elasticizeStat exception: ", e);
-        //    return false;
-        //}
+        
+        try {
+            IndexResponse iResponse = client.prepareIndex("runriver_stats_write", "stats").setRefresh(true)
+                .setSource(jsonBuilder()
+                    .startObject()
+                    .field("rivername", rivername)
+                    .field("index", index)
+                    .field("query_name", queryname)
+                    .field("took", sResponse.getTookInMillis())
+                    .field("timed_out", sResponse.isTimedOut())
+                    .field("shards_total", sResponse.getTotalShards())
+                    .field("shards_successful", sResponse.getSuccessfulShards())
+                    .field("shards_failed", sResponse.getFailedShards())
+                    .field("hits_total", sResponse.getHits().getTotalHits())
+                    .endObject())
+                .execute()
+                .actionGet();   
+            return true;
+        } catch (Exception e) {
+            logger.error("elasticizeStat exception: ", e);
+            return false;
+        }
     }
 
 }

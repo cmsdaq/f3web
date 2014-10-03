@@ -66,7 +66,7 @@ public class RunMonitor extends AbstractRunRiverThread {
         
         SearchResponse response = client.prepareSearch(runIndex_read).setTypes("run")
             .setSource(runQuery).execute().actionGet();
-        //collectStats(riverName.getName(),"runRanger",runIndex_read,response);
+        collectStats(riverName.getName(),"runRanger",runIndex_read,response);
 
         if (response.getHits().getTotalHits() == 0 ) { return; }
         
@@ -137,7 +137,6 @@ public class RunMonitor extends AbstractRunRiverThread {
     }
 
     public void createStateMapping(Client client, String runIndex){
-        logger.info("createStateMapping");
         client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
         GetMappingsResponse response = client.admin().indices().prepareGetMappings(runIndex_write)
             .setTypes("state-hist").execute().actionGet();
@@ -164,14 +163,18 @@ public class RunMonitor extends AbstractRunRiverThread {
     }
 
     public void createStatIndex(Client client, String index){
+        if(!statsEnabled){return;}
         client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
         Boolean exists = client.admin().indices().prepareExists(index).execute().actionGet().isExists();
+        logger.info("statIndex exists: "+exists.toString());
         if (!exists){
-            client.admin().indices().prepareCreate(index)
-                .addMapping("stats",statsMapping)
+            logger.info("createStatIndex"); 
+            client.admin().indices().prepareCreate(index).addMapping("stats",statsMapping)
                 .execute().actionGet();
-            client.admin().indices().prepareAliases().addAlias(index,index+"_read");
-            client.admin().indices().prepareAliases().addAlias(index,index+"_write");
+            client.admin().indices().prepareAliases().addAlias(index,index+"_read")
+                .execute().actionGet();;
+            client.admin().indices().prepareAliases().addAlias(index,index+"_write")
+                .execute().actionGet();;
         }
     }
 }

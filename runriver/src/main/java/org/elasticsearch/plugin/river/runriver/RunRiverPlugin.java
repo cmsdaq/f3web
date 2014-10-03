@@ -17,7 +17,7 @@ public class RunRiverPlugin extends AbstractPlugin {
 
     @Override
     public String name() {
-        return "river-runRiver";
+        return "river-runriver";
     }
 
     @Override

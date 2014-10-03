@@ -28,15 +28,10 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.Aggregation;
-import org.elasticsearch.common.xcontent.ToXContent;
+//import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.search.aggregations.Aggregation;
-import org.elasticsearch.search.aggregations.Aggregations;
-import org.elasticsearch.search.aggregations.InternalAggregations;
-import org.elasticsearch.search.internal.InternalSearchResponse;
 
 //RIVER
 import org.elasticsearch.river.River;
@@ -102,7 +97,7 @@ public class Collector extends AbstractRunRiverThread {
 
 
     public void collectStreams() throws Exception {
-        //logger.info("COLLECT STREAMS");
+        logger.info("collectStreams");
         Boolean dataChanged;
         
         if(firstTime){
@@ -118,7 +113,7 @@ public class Collector extends AbstractRunRiverThread {
         //logger.info("streamquery: "+streamQuery.toString());
         SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("fu-out")
             .setSource(streamQuery).execute().actionGet();
-        //collectStats(riverName.getName(),"streamQuery",tribeIndex,sResponse);
+        collectStats(riverName.getName(),"streamQuery",tribeIndex,sResponse);
         //logger.info(String.valueOf(sResponse.getHits().getTotalHits()));
         if(sResponse.getHits().getTotalHits() == 0L){ 
             logger.info("streamQuery returns 0 hits");
@@ -208,7 +203,7 @@ public class Collector extends AbstractRunRiverThread {
         SearchResponse sResponse = remoteClient.prepareSearch(tribeIndex).setTypes("prc-i-state")
             .setSource(statesQuery).execute().actionGet();
         
-        //collectStats(riverName.getName(),"statesQuery",tribeIndex,sResponse);
+        collectStats(riverName.getName(),"statesQuery",tribeIndex,sResponse);
         
         //logger.info(String.valueOf(sResponse.getHits().getTotalHits()));
         if(sResponse.getHits().getTotalHits() == 0L){ 
@@ -269,7 +264,7 @@ public class Collector extends AbstractRunRiverThread {
         SearchResponse response = client.prepareSearch(boxinfo_write).setSource(boxinfoQuery)
             .execute().actionGet();
         
-        //collectStats(riverName.getName(),"boxinfoQuery",boxinfo_write,response);            
+        collectStats(riverName.getName(),"boxinfoQuery",boxinfo_write,response);            
         
         logger.info("Boxinfo: "+ String.valueOf(response.getHits().getTotalHits()));
         if (response.getHits().getTotalHits() == 0 ) { selfDelete(); }
