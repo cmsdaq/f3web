@@ -36,6 +36,7 @@ public class RunMonitor extends AbstractRunRiverThread {
         
     JSONObject streamHistMapping;
     JSONObject stateHistMapping;
+    JSONObject statsMapping;
     JSONObject runQuery;
 
     public RunMonitor(RiverName riverName, RiverSettings settings, Client client) {
@@ -44,7 +45,7 @@ public class RunMonitor extends AbstractRunRiverThread {
 
     @Override
     public void beforeLoop(){
-        logger.info("RunMonitor Started v1.3.2");
+        logger.info("RunMonitor Started v1.3.3");
         getQueries();
         prepareServer(client,runIndex_write);
         this.interval = polling_interval;
@@ -65,6 +66,7 @@ public class RunMonitor extends AbstractRunRiverThread {
         
         SearchResponse response = client.prepareSearch(runIndex_read).setTypes("run")
             .setSource(runQuery).execute().actionGet();
+        collectStats(riverName.getName(),"runRanger",runIndex_read,response);
 
         if (response.getHits().getTotalHits() == 0 ) { return; }
         
@@ -81,7 +83,7 @@ public class RunMonitor extends AbstractRunRiverThread {
         String index = "_river";
         String type = "runriver_"+runNumber;
 
-// FOR DYNAMIC MAPPING ISSUE, not working yet
+        // FOR DYNAMIC MAPPING ISSUE
         String map = "{\"dynamic\" : true}}";
 
         PutMappingRequestBuilder pmrb = client.admin().indices()
@@ -101,6 +103,7 @@ public class RunMonitor extends AbstractRunRiverThread {
                         .field("runIndex_read", runIndex_read)
                         .field("runIndex_write", runIndex_write)
                         .field("boxinfo_write", boxinfo_write)
+                        .field("enable_stats", statsEnabled)
                     .endObject()
                   )
         .execute()
@@ -119,6 +122,7 @@ public class RunMonitor extends AbstractRunRiverThread {
                 runQuery = getJson("runRanger");
                 stateHistMapping = getJson("stateHistMapping");
                 streamHistMapping = getJson("streamHistMapping"); 
+                statsMapping = getJson("statsMapping"); 
             } catch (Exception e) {
                 logger.error("RunMonitor getQueries Exception: ", e);
             }
@@ -129,10 +133,10 @@ public class RunMonitor extends AbstractRunRiverThread {
         //runindexCheck(client,runIndex);
         createStreamMapping(client,runIndex);
         createStateMapping(client,runIndex);
+        createStatIndex(client,"runriver_stats"); 
     }
 
     public void createStateMapping(Client client, String runIndex){
-        logger.info("createStateMapping");
         client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
         GetMappingsResponse response = client.admin().indices().prepareGetMappings(runIndex_write)
             .setTypes("state-hist").execute().actionGet();
@@ -158,4 +162,19 @@ public class RunMonitor extends AbstractRunRiverThread {
             .execute().actionGet();
     }
 
+    public void createStatIndex(Client client, String index){
+        if(!statsEnabled){return;}
+        client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
+        Boolean exists = client.admin().indices().prepareExists(index).execute().actionGet().isExists();
+        logger.info("statIndex exists: "+exists.toString());
+        if (!exists){
+            logger.info("createStatIndex"); 
+            client.admin().indices().prepareCreate(index).addMapping("stats",statsMapping)
+                .execute().actionGet();
+            client.admin().indices().prepareAliases().addAlias(index,index+"_read")
+                .execute().actionGet();;
+            client.admin().indices().prepareAliases().addAlias(index,index+"_write")
+                .execute().actionGet();;
+        }
+    }
 }
