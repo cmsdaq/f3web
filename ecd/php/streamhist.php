@@ -15,6 +15,9 @@ if(!isset($_GET["sysName"])) $sysName = "cdaq";
     else $sysName = $_GET["sysName"];
 if(!isset($_GET["streamList"])) $streamList = array("a","b");
     else $streamList = $_GET["streamList"]; 
+if(!isset($_GET["timePerLs"])) $timePerLs = 24.3;
+    else $timePerLs = $_GET["timePerLs"]; 
+
 
 $interval = round((intval($to) - intval($from)) / intval($intervalNum),0 );
 if ($interval == 0 ){ $interval = 1; };
@@ -133,7 +136,7 @@ foreach($streams as $stream) {
         else{ $percent = round($in/$total*100,2);  }
         
 //OUTPUT
-        
+        if($timePerLs>1){ $out = round($out/$timePerLs,2); }
 
         $ret["streams"][$stream["key"]]["dataOut"][] = array("name"=>$ls,"y"=>$out);
         $ret["streams"][$stream["key"]]["fileSize"][] = array("name"=>$ls,"y"=>$filesize);

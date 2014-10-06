@@ -166,7 +166,7 @@
 <div class="panel panel-primary">
 <div class="panel-heading clearfix">
 <div class="panel-title pull-left"><i class="fa fa-bar-chart-o"></i> Stream Rates </div>
-
+<div class="btn btn-xs btn-info pull-left" style = "display:none; margin-left: 10px" id="srUpdating">Updating...</div>
 <div class="btn-group btn-group-xs pull-right">
   <button type="button" class="btn btn-xs btn-primary btn-sr disabled" >&larr;</button>
   <button type="button" class="btn btn-xs btn-default btn-dd disabled">&rarr;</button>
@@ -177,7 +177,13 @@
 <button class="btn btn-xs btn-primary ">Events</button>
 <button class="btn btn-xs btn-default ">Bytes</button>
 </div>
-<div class="btn btn-xs btn-info pull-right" style = "display : none " id="srUpdating">Updating...</div>
+<div class="col-xs-2 input-group input-group-xs pull-right" >
+<span class="input-group-addon"><input style="vertical-align:middle;" type="checkbox" id="srdivisorcb"></span>
+<span class="input-group-addon"> seconds per LS</span>
+<input type="number" class="is-float form-control" placeholder="" value="24.3" step="0.1" id="srtimeperls">
+</div>
+
+
 </div>
 <div class="panel-body">
 <div id="streamrates-chart"></div>
@@ -240,9 +246,9 @@
 <div class="panel-title pull-left"><i class="fa fa-bar-chart-o"></i> Hlt Rates (Show last 50 ls)</div>
 
 
-<div class="col-xs-2 input-group input-group-sm pull-right" >
+<div class="col-xs-2 input-group input-group-xs pull-right" >
   <span class="input-group-addon">seconds per LS</span>
-  <input type="number" class="form-control" placeholder="" value="24.3" step="0.1" id="timeperls">
+  <input type="number" class="is-float form-control" placeholder="" value="24.3" step="0.1" id="timeperls">
 </div>
 <div class="pull-right" id="errmsg"></div>      
 
