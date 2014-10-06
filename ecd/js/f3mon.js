@@ -247,6 +247,9 @@ var streamChart = {
     chart : false,
     mchart : false,
     init : function(){
+
+        this.updateUnit = false;
+        this.timePerLs = 1;
         
         this.sliderBound= true;
         this.sliderChanging= false;
@@ -338,10 +341,20 @@ var streamChart = {
                     });
                 }
         });
-        if ($('#srdivisorcb').prop('checked')){
-            timePerLs = $("#timeperls").val();
+
+        if (streamChart.updateUnit){
+            if ($('#srdivisorcb').is(':checked')) {
+                unit = streamChart.unit+"/s"; 
+                streamChart.timePerLs = $("#srtimeperls").val();
+            } 
+            else { 
+                unit = streamChart.unit; 
+                streamChart.timePerLs = 1; 
+            }
+            streamChart.chart.yAxis[0].update({title: {text: unit}},false); 
+            streamChart.updateUnit = false;
         }
-            else{ timePerLs = 1 }
+
         $.when(  $.getJSON('php/streamhist.php?',
             {
                 runNumber   : runInfo.runNumber,
@@ -350,7 +363,7 @@ var streamChart = {
                 intervalNum : 20,
                 sysName     : runInfo.sysName,
                 streamList  : runInfo.streams,
-                timePerLs   : timePerLs,
+                timePerLs   : streamChart.timePerLs,
             })).done(function(j){
 
                     //console.log(j);
@@ -794,6 +807,31 @@ function getIndices(){
 function setControls(){
     console.log("setControls")
 
+    $('#srdivisorcb').change(function() {
+        streamChart.updateUnit = true;
+    });
+
+
+    $('#btn-unit-e').click(function() {    
+        if ($('#btn-unit-e').hasClass('btn-primary')){return;}
+        streamChart.unit="Events";
+        streamChart.updateUnit==true;
+        $('#btn-unit-e').removeClass('btn-default');
+        $('#btn-unit-e').addClass('btn-primary');
+        $('#btn-unit-b').removeClass('btn-primary');
+        $('#btn-unit-b').addClass('btn-default');
+        
+    })
+    $('#btn-unit-b').click(function() {    
+        streamChart.unit="Bytes";
+        streamChart.updateUnit==true;
+        if ($('#btn-unit-b').hasClass('btn-primary')){return;}
+        $('#btn-unit-b').removeClass('btn-default');
+        $('#btn-unit-b').addClass('btn-primary');
+        $('#btn-unit-e').removeClass('btn-primary');
+        $('#btn-unit-e').addClass('btn-default');
+    })
+
     // Catch all events related to changes
     $('.is-float').on('change keyup', function() {
       // Remove invalid characters
@@ -847,28 +885,6 @@ function setControls(){
         mySwiper.swipeTo(0);
     });
 
-    $('.btn-unit').click(function() {
-        if (streamChart.unit=="Events"){streamChart.unit="Bytes"}else{streamChart.unit="Events"}
-        streamChart.chart.yAxis[0].update({title: {text: streamChart.unit},}); 
-        console.log(streamChart.unit);
-        $(this).find('.btn').toggleClass('active');  
-        
-        if ($(this).find('.btn-primary').size()>0) {
-            $(this).find('.btn').toggleClass('btn-primary');
-        }
-        if ($(this).find('.btn-danger').size()>0) {
-            $(this).find('.btn').toggleClass('btn-danger');
-        }
-        if ($(this).find('.btn-success').size()>0) {
-            $(this).find('.btn').toggleClass('btn-success');
-        }
-        if ($(this).find('.btn-info').size()>0) {
-            $(this).find('.btn').toggleClass('btn-info');
-        }
-        
-        $(this).find('.btn').toggleClass('btn-default');
-           
-    });
 
     $("#riverstatus").popover({container:'body',html:true});
     $('#runranger').tooltip({animation:true});

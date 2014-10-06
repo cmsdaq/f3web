@@ -41,7 +41,8 @@ $dataAccepted = array();
 $dataProcessed = array();
 
 
-$hits = $res["hits"]["hits"];
+$hits = &$res["hits"]["hits"];
+
 foreach ($hits as $hit ) {
     $ls = $hit["_source"]["ls"];
     $processed = $hit["_source"]["processed"];
@@ -61,6 +62,8 @@ foreach ($hits as $hit ) {
         $dataAccepted[$name][$ls] += $accepted;
     }
 }
+unset($res);
+unset($hits);
 
 $out = array();
 foreach ( $dataProcessed as $ls => $value ) {

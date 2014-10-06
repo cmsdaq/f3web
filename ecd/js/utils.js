@@ -1,6 +1,6 @@
 var NASTRING = "N/A";
-var WAITINGCHART = "No data.";
-var NODATACHART = "No data for this run.";
+var WAITINGCHART = "No monitoring information.";
+var NODATACHART = "No monitoring information.";
 var DEFAULTINDEX = "cdaq";
 
 

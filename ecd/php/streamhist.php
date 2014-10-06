@@ -136,7 +136,10 @@ foreach($streams as $stream) {
         else{ $percent = round($in/$total*100,2);  }
         
 //OUTPUT
-        if($timePerLs>1){ $out = round($out/$timePerLs,2); }
+        if($timePerLs>1){ 
+            $out = round($out/$timePerLs,2); 
+            $filesize = round($filesize/$timePerLs,2);
+        }
 
         $ret["streams"][$stream["key"]]["dataOut"][] = array("name"=>$ls,"y"=>$out);
         $ret["streams"][$stream["key"]]["fileSize"][] = array("name"=>$ls,"y"=>$filesize);

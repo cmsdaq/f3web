@@ -173,15 +173,26 @@
 </div>                                                    
 <div class="btn btn-xs disabled pull-right" id="logButton">QueryTime: 
 <span class="badge" id="querytime">N/A</span></div> 
-<div class="btn-group btn-unit btn-group-xs pull-right"> 
-<button class="btn btn-xs btn-primary ">Events</button>
-<button class="btn btn-xs btn-default ">Bytes</button>
+<div class="btn-group btn-group-xs pull-right"> 
+<button class="btn btn-xs btn-primary" id="btn-unit-e"> Events</button>
+<button class="btn btn-xs btn-default" id="btn-unit-b"> Bytes</button>
 </div>
+
+<div class="col-xs-2 input-group input-group-xs pull-right ">
+<div class="input-group-btn bnt-group-xs">
+<label class="btn btn-xs btn-primary checkbox-inline" >
+<input style="vertical-align:middle;" type="checkbox" id="srdivisorcb"> Seconds per LS</label>
+</div><!-- /btn-group -->
+<input type="number" class="is-float form-control" placeholder="" value="24.3" step="0.1" id="srtimeperls">
+</div><!-- /input-group -->
+
+<!-- 
 <div class="col-xs-2 input-group input-group-xs pull-right" >
 <span class="input-group-addon"><input style="vertical-align:middle;" type="checkbox" id="srdivisorcb"></span>
 <span class="input-group-addon"> seconds per LS</span>
-<input type="number" class="is-float form-control" placeholder="" value="24.3" step="0.1" id="srtimeperls">
 </div>
+-->
+
 
 
 </div>
